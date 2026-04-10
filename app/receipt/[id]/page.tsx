@@ -1,9 +1,7 @@
 import ReceiptCard from "./ReceiptCard";
-// import { getOrderById } from "@/app/lib/orders"; {/* real data*/}
+import Link from "next/link";
+import { X, History } from "lucide-react";
 
-{
-  /* mock data source*/
-}
 async function getOrders() {
   return [
     {
@@ -12,7 +10,6 @@ async function getOrders() {
       quantity: 5,
       amount: 547,
       paymentType: "Cash",
-      operator: "Cashier A",
     },
     {
       date: "03/31/26",
@@ -20,41 +17,48 @@ async function getOrders() {
       quantity: 2,
       amount: 200,
       paymentType: "Card",
-      operator: "Cashier B",
     },
   ];
 }
-{
-  /* real data*/
-}
-// export default function ReceiptPage({ params }: { params: { id: string } }) {
-//   const order = await  getOrderById(params.id);
-// }
 
-{
-  /*function for mock data*/
-}
-export default async function ReceiptPage(props: {
+export default async function ReceiptPage({
+  params,
+}: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await props.params; // extract id from url
-  const orders = await getOrders(); // get mock data
-  const order = orders.find((o) => o.receiptNo === id); //find  matching receipt
+  const { id } = await params;
+  const orders = await getOrders();
+  const order = orders.find((o) => o.receiptNo === id);
 
+
+  [/*if nothing found*/]
   if (!order) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-red-600 text-lg">Receipt not found</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F5E6CA]">
+        <p className="text-[#4B3832] font-black italic text-xl uppercase">Receipt not found</p>
+        <Link href="/history" className="mt-4 text-[#6F4E37] underline font-bold">Return to History</Link>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      {/*  yellow background wrapper */}
-      <div className="bg-yellow-400 p-8 rounded-sm shadow-sm">
-        <ReceiptCard order={order} />
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#F5E6CA] p-6 relative">
+      <div className="w-full max-w-4xl flex justify-end mb-4 print:hidden">
+        <Link 
+          href="/history" 
+          className="p-3 bg-white hover:bg-[#4B3832] text-[#4B3832] hover:text-white rounded-2xl shadow-md transition-all active:scale-95 border border-[#DCC7AA]/20 group">
+          <X size={24} strokeWidth={3}/>
+        </Link>
       </div>
+
+      <div className="relative">
+        <div className="absolute inset-0 bg-[#6F4E37]/10 blur-[100px] rounded-full" />
+        <ReceiptCard order={order}/>
+      </div>
+
+      <p className="mt-12 text-[#4B3832]/20 font-black text-[9px] uppercase tracking-[0.5em] flex items-center gap-2 print:hidden">
+        <History size={12}/> BrewFlow Transaction Record
+      </p>
     </div>
   );
 }

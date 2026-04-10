@@ -1,16 +1,19 @@
 import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
+import { LoginForm } from "./login/LoginForm"; 
 
-export default async function Page() {
+export default async function LoginPage() {
   const supabase = await createClient();
+  
+  const { data } = await supabase.auth.getUser();
 
-  // initial setup basic Supabase connection using cookies + createClient.
-  // Replace this scaffold with real queries and UI once data is added.
+  if (data?.user) {
+    redirect("/cashier"); 
+  }
+
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Homepage</h1>
-      <p className="text-gray-600">
-        Supabase is connected. Ready to add queries and UI.
-      </p>
-    </main>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <LoginForm />
+      </div>
   );
 }
