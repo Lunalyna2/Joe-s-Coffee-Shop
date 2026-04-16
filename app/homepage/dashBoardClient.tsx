@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Layers3, GlassWater, Coffee, Utensils, CakeSlice } from 'lucide-react';
+import { Search, Layers, GlassWater, Coffee, Utensils, CakeSlice } from 'lucide-react';
 import { MenuItem } from './menuItem';
 import { OrderCard } from './orderCard';  
 import Link from 'next/link'; 
@@ -20,7 +20,7 @@ export default function DashboardClient({
   const categories = ["ALL", "NON-COFFEE", "COFFEE-BASED", "PASTA & BURGERS", "DESSERTS & PASTRIES"];
   
   const categoryIcons: any = {
-    "ALL": <Layers3 size={14} />,
+    "ALL": <Layers size={14} />,
     "NON-COFFEE": <GlassWater size={14} />,
     "COFFEE-BASED": <Coffee size={14} />,
     "PASTA & BURGERS": <Utensils size={14} />, 
@@ -118,7 +118,8 @@ export default function DashboardClient({
                   key={cat} 
                   onClick={() => setActiveCategory(cat)} 
                   className={`px-4 py-2 rounded-full text-[8px] font-black transition-all uppercase flex items-center gap-2 whitespace-nowrap tracking-widest ${
-                    activeCategory === cat ? 'bg-[#4B3832] text-white' : 'text-[#4B3832]/60'}`}>
+                    activeCategory === cat ? 'bg-[#4B3832] text-white' : 'text-[#4B3832]/60'
+                  }`}>
                    {categoryIcons[cat]}
                    {cat}
                 </button>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { UtensilsCrossed } from 'lucide-react';
+import { Utensils } from 'lucide-react';
 import { CheckoutItem } from '../receiptmodal/checkOutItem';
 import { CheckoutHeader } from '../receiptmodal/checkOutHeader';
 import { CheckoutSummary } from '../receiptmodal/checkOutSummary';
@@ -43,7 +43,7 @@ export default function OrderDetailsModal({
       <section className="flex-1 overflow-y-auto px-5 py-4 space-y-3 no-scrollbar bg-[#F5E6CA]">
         {orderItems.length === 0 ? (
           <div className="h-40 flex flex-col items-center justify-center text-[#DCC7AA]">
-             <UtensilsCrossed size={48} strokeWidth={1} className="mb-2 opacity-10" />
+             <Utensils size={48} strokeWidth={1} className="mb-2 opacity-10" />
              <p className="text-[9px] font-black tracking-widest uppercase">Cart is empty</p>
           </div>
         ) : (
