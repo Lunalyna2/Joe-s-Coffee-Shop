@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image'; // Recommended for Next.js optimization
 import { usePathname } from 'next/navigation';
 
 const Navbar: React.FC = () => {
@@ -16,11 +17,20 @@ const Navbar: React.FC = () => {
   return (
     <nav className="flex justify-between items-center px-6 md:px-12 py-5 bg-[#4B3832] text-white shadow-xl border-b border-[#DCC7AA]/10 sticky top-0 z-40">
       <Link href="/cashier" className="flex items-center gap-3 group">
-        <div className="w-10 h-10 bg-[#DCC7AA] rounded-xl flex items-center justify-center font-black text-[#4B3832] text-sm shadow-lg group-hover:rotate-6 transition-transform">
-          BF
+        
+        <div className="w-10 h-10 bg-[#DCC7AA] rounded-full flex items-center justify-center overflow-hidden shadow-lg group-hover:rotate-6 transition-transform relative">
+          <Image 
+            src="/BF logo.png" 
+            alt="BrewFlow Logo"
+            fill
+            className="object-cover" 
+            priority
+          />
+          <span className="sr-only">BrewFlow</span> 
         </div>
+
         <div className="hidden sm:block">
-          <p className="font-black text-[12px] tracking-tighter leading-none italic">BREWFLOW</p>
+          <p className="font-black text-[12px] tracking-tighter leading-none italic uppercase">BREWFLOW</p>
           <p className="text-[9px] font-bold text-[#DCC7AA] tracking-[0.2em] leading-none uppercase">Admin</p>
         </div>
       </Link>
