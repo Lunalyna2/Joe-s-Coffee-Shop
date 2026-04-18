@@ -27,17 +27,29 @@ export function AddMenuModal({ menuItems, onClose, onMenuUpdate }: AddMenuModalP
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+  
+    if (name === 'price' && parseFloat(value) < 0) {
+      return; 
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
+    
+    const numericPrice = parseFloat(formData.price);
+    if (isNaN(numericPrice) || numericPrice < 0) {
+      alert("Please enter a valid price (minimum 0).");
+      return;
+    }
+
     let updatedItems;
 
     if (editingId) {
       updatedItems = items.map(item => 
         item.id === editingId 
-          ? { ...item, ...formData, price: parseFloat(formData.price), available: formData.available === 'true' } 
+          ? { ...item, ...formData, price: numericPrice, available: formData.available === 'true' } 
           : item
       );
       setEditingId(null);
@@ -45,7 +57,7 @@ export function AddMenuModal({ menuItems, onClose, onMenuUpdate }: AddMenuModalP
       const newItem = {
         id: Date.now(), 
         ...formData,
-        price: parseFloat(formData.price),
+        price: numericPrice,
         available: formData.available === 'true',
         quantity: 0
       };
@@ -77,6 +89,7 @@ export function AddMenuModal({ menuItems, onClose, onMenuUpdate }: AddMenuModalP
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6">
       <div className="absolute inset-0 bg-[#4B3832]/80 backdrop-blur-md" onClick={onClose} />
       <div className="relative w-full max-w-5xl bg-[#F5E6CA] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row h-[85vh] border-4 border-[#4B3832]">
+        
         {/*form section*/}
         <div className="w-full md:w-1/3 bg-white p-8 border-r-2 border-[#4B3832]/10 overflow-y-auto">
           <div className="mb-8">
@@ -105,6 +118,7 @@ export function AddMenuModal({ menuItems, onClose, onMenuUpdate }: AddMenuModalP
                 <input 
                   required
                   type="number"
+                  min="0" 
                   step="0.01"
                   name="price"
                   value={formData.price}
@@ -158,7 +172,8 @@ export function AddMenuModal({ menuItems, onClose, onMenuUpdate }: AddMenuModalP
             )}
           </form>
         </div>
-        {/*inventory list section */}
+
+        {/*inventory list section*/}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="p-8 flex justify-between items-center bg-[#F5E6CA] border-b border-[#4B3832]/5">
             <div>
