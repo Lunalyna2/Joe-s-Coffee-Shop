@@ -1,7 +1,7 @@
 "use client";
 
 import { Printer } from "lucide-react";
-
+//triggers print dialog for the receipt page
 export default function ReceiptCard({ order }: { order: any }) {
   const handlePrint = () => {
     if (typeof window !== "undefined") {
@@ -11,6 +11,7 @@ export default function ReceiptCard({ order }: { order: any }) {
 
   return (
     <>
+    {/*global styles for print media to ensure background colors are printed correctly*/}
       <style jsx global>{`
         @media print {
           .print-bg-fix {
@@ -20,7 +21,7 @@ export default function ReceiptCard({ order }: { order: any }) {
           }
         }
       `}</style>
-
+      {/*main receipt card container*/}
       <div 
         id="printable-receipt"
         className="w-150 max-w-7xl mx-auto bg-white rounded-4xl shadow-[0_30px_60px_-15px_rgba(75,56,50,0.2)] overflow-hidden relative border border-[#DCC7AA]/20 print:rounded-none">
@@ -28,13 +29,13 @@ export default function ReceiptCard({ order }: { order: any }) {
           <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
               <div className="absolute rotate-45 -top-10 -left-10 w-32 h-32 bg-white rounded-full blur-3xl" />
           </div>
-
+          {/*receipt header section with logo and transaction label*/}
           <h1 className="text-white font-black text-3xl italic tracking-tighter uppercase leading-none">BrewFlow</h1>
           <div className="mt-2 inline-block px-3 py-1 bg-[#DCC7AA]/20 rounded-full border border-[#DCC7AA]/30">
               <p className="text-[#DCC7AA] text-[8px] font-black tracking-[0.4em] uppercase">Official Transaction</p>
           </div>
         </div>
-
+        {/*receipt details section with customer info, items list, and totals*/}
         <div className="p-8 pt-10">
           <div className="flex justify-between items-start mb-10 pb-8 border-b-2 border-dashed border-[#F5E6CA]">
             <div className="space-y-1">
@@ -50,7 +51,7 @@ export default function ReceiptCard({ order }: { order: any }) {
               <p className="text-sm font-bold text-[#4B3832]">{order.date || "March 30, 2026"}</p>
             </div>
           </div>
-
+          {/*ordered items list section*/}
           <div className="mb-10">
             <p className="text-[10px] font-black text-[#4B3832] uppercase tracking-widest mb-4">Ordered Items:</p>
             <div className="space-y-3">
@@ -66,7 +67,7 @@ export default function ReceiptCard({ order }: { order: any }) {
               ))}
             </div>
           </div>
-
+          {/*totals and payment details section*/}
           <div className="space-y-4 pt-6 border-t border-[#F5E6CA]">
             {[
               { label: "Total Items", value: `${order.quantity || 0} Units` },
@@ -84,7 +85,7 @@ export default function ReceiptCard({ order }: { order: any }) {
               </div>
             ))}
           </div>
-
+          {/*total amount collected section with emphasis on the grand total, hidden when printing since it's already displayed in the details above*/}
           <div className="mt-12 mb-8 bg-[#4B3832] rounded-4xl p-8 text-center shadow-xl shadow-[#4B3832]/20 print-bg-fix">
             <p className="text-[9px] font-black text-[#DCC7AA] uppercase tracking-[0.3em] mb-2 opacity-60">Total Amount Collected</p>
             <div className="flex items-center justify-center gap-1 text-white">
@@ -93,18 +94,19 @@ export default function ReceiptCard({ order }: { order: any }) {
             </div>
           </div>
 
-
+          {/*print button section, triggers the print dialog and is hidden when printing to avoid showing on the printed receipt*/}
           <button 
             onClick={handlePrint}
             className="w-full group flex items-center justify-center gap-3 py-5 bg-[#F5E6CA] text-[#4B3832] rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-[#DCC7AA] transition-all active:scale-[0.98] print:hidden shadow-sm">
             <Printer size={16} />
             Print Copy of Transaction
           </button>
-
+          {/*thank you note section, hidden when printing*/}
           <p className="mt-8 text-center text-[9px] font-bold text-[#DCC7AA] uppercase tracking-widest italic">
           Thanks for brewing with us!
           </p>
         </div>
+        {/*decorative footer dots, hidden when printing*/}
         <div className="flex justify-around px-2 -mb-2 opacity-50 print:hidden">
           {[...Array(14)].map((_, i) => (
             <div key={i} className="w-5 h-5 bg-[#F5E6CA] rounded-full" />

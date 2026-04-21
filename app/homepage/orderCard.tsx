@@ -1,5 +1,5 @@
 import { ChevronDown } from 'lucide-react';
-
+//order card component for displaying individual orders in cashier dashboard with status update functionality
 export const OrderCard = ({ order, updateOrderStatus, getStatusStyles, statusOptions }: any) => (
   <div className={`bg-white p-4 rounded-3xl min-w-45 shadow-sm border-2 transition-all relative
     ${order.status === "READY TO SERVE" ? "border-emerald-500 shadow-emerald-500/10" : "border-[#DCC7AA]"}`}>
@@ -7,6 +7,7 @@ export const OrderCard = ({ order, updateOrderStatus, getStatusStyles, statusOpt
       <span className="truncate pr-2">{order.name || "GUEST"}</span>
       <span className="opacity-40">#{order.id.toString().slice(-4)}</span>
     </div>
+    {/*order details section*/}
     <div className="relative">
       <select 
         value={order.status} 

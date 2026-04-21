@@ -6,7 +6,7 @@ import { MenuItem } from './menuItem';
 import { OrderCard } from './orderCard';  
 import Link from 'next/link'; 
 import { AddMenuModal } from '../add menu/addMenuModal';
-
+// main dashboard client component for cashier dashboard
 export default function DashboardClient({ 
   menuItems, 
   updateQuantity, 
@@ -16,12 +16,12 @@ export default function DashboardClient({
   setOrderFilter,
   onMenuUpdate 
 }: any) {
+  // local state for search, category filter, and menu modal visibility
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState('ALL');
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
-
+  // predefined categories and their corresponding icons
   const categories = ["ALL", "NON-COFFEE", "COFFEE-BASED", "PASTA & BURGERS", "DESSERTS & PASTRIES"];
-  
   const categoryIcons: any = {
     "ALL": <Layers size={14} />,
     "NON-COFFEE": <GlassWater size={14} />,
@@ -29,9 +29,8 @@ export default function DashboardClient({
     "PASTA & BURGERS": <Utensils size={14} />, 
     "DESSERTS & PASTRIES": <CakeSlice size={14} />
   };
-
+  //predefined status options and style for orders
   const statusOptions = ["IN PROGRESS", "READY TO SERVE", "COMPLETED", "CANCELED"];
-
   const getStatusStyles = (status: string) => {
     switch (status) {
       case "IN PROGRESS": return "bg-amber-100 text-amber-900 border-amber-300 shadow-amber-900/5";
@@ -41,9 +40,8 @@ export default function DashboardClient({
       default: return "bg-[#F5E6CA]/50 border-[#DCC7AA] text-[#4B3832]";
     }
   };
-
+  // filter orders based on selected order type and menu items based on search and category
   const filteredOrders = orders.filter((o: any) => o.type === orderFilter);
-  
   const filteredMenu = menuItems.filter((item: any) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = activeCategory === "ALL" || item.category === activeCategory;

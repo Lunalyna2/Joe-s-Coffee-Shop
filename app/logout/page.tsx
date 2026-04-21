@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { useFormStatus } from 'react-dom';
 import { LogOut, Loader2, ArrowLeft } from 'lucide-react';
 import { logoutAction } from './actions';
-
+//logout page with confirmation prompt and logout action 
 function LogoutButton() {
   const { pending } = useFormStatus();
-
+  //logout button that triggers logout action and shows loading state while processing
   return (
     <button
       type="submit"
@@ -27,7 +27,7 @@ function LogoutButton() {
     </button>
   );
 }
-
+//main logout page component with confirmation message and options to log out or go back to cashier dashboard
 export default function LogoutPage() {
   return (
     <main className="flex items-center justify-center min-h-screen bg-[#F5E6CA] p-6 relative">

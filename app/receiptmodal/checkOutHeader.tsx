@@ -1,5 +1,5 @@
 import { X, User } from 'lucide-react';
-
+//checkout header component for the receipt modal
 export const CheckoutHeader = ({ 
   orderType, 
   setOrderType, 
@@ -7,6 +7,7 @@ export const CheckoutHeader = ({
   setCustomerName, 
   onClose 
 }: any) => (
+  //section container with close button, order type selection, and customer name input
   <section className="p-5 shrink-0 bg-[#4B3832] text-white z-20">
     <div className="flex justify-between items-center mb-4">
       <div className="flex items-center gap-3">
@@ -16,7 +17,7 @@ export const CheckoutHeader = ({
         <X size={20} strokeWidth={3} />
       </button>
     </div>
-
+    
     <div className="grid grid-cols-2 gap-2 bg-[#F5E6CA]/10 rounded-xl p-1 border border-white/10 mb-4">
       {['DINE IN', 'TAKE OUT'].map(type => (
         <button 
@@ -28,7 +29,7 @@ export const CheckoutHeader = ({
         </button>
       ))}
     </div>
-
+    
     <div className="relative group">
       <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4B3832]/40" size={14} />
       <input 

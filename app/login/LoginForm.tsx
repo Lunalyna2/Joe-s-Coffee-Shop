@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { loginAction } from "./actions";
 import { Mail, Lock, Coffee, Eye, EyeOff, LoaderCircle, ArrowRight } from "lucide-react";
-
+//login form component for admin access, with email and password inputs, and error handling
 export function LoginForm() {
   const [state, formAction] = useActionState(loginAction, { error: null });
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +21,7 @@ export function LoginForm() {
             <span className="text-[#DCC7AA]">Flow</span>
           </h1>
         </div>
-
+        {/*message section*/}
         <div className="relative z-10">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-0.5 w-12 bg-[#DCC7AA]" />
@@ -93,7 +93,7 @@ export function LoginForm() {
               <SubmitButton />
             </div>
 
-            {/* error message */}
+            {/*error message*/}
             {state?.error && (
               <div className="mt-6 sm:mt-8 flex gap-4 items-center bg-red-50 border border-red-100 p-4 sm:p-5 rounded-2xl sm:rounded-3xl animate-in fade-in zoom-in-95">
                 <div>
@@ -114,7 +114,7 @@ export function LoginForm() {
     </div>
   );
 }
-
+//submit button component with loading state for form submission
 function SubmitButton() {
   const { pending } = useFormStatus();
   

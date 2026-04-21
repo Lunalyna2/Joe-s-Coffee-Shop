@@ -38,13 +38,13 @@ export default function AllOrdersPage() {
       type: "TAKE OUT"
     },
   ]);
-
+  //update order status
   const updateOrderStatus = (orderId: string, newStatus: string) => {
     setOrders(prevOrders => prevOrders.map(order => 
       order.id === orderId ? { ...order, status: newStatus } : order
     ));
   };
-
+  //get styles for order status
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "IN PROGRESS":
@@ -65,6 +65,7 @@ export default function AllOrdersPage() {
       <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#4B3832]/5 rounded-full blur-3xl" />
       <div className="max-w-7xl mx-auto bg-white rounded-[3rem] min-h-[80vh] p-8 md:p-16 shadow-xl border border-[#DCC7AA]/30 relative z-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-16">
+          {/*page header section*/}
           <div className="flex items-center gap-6">
             <Link href="/cashier" className="p-4 bg-[#F5E6CA] hover:bg-[#DCC7AA] rounded-2xl transition-all text-[#4B3832] shadow-sm group">
               <ArrowLeft size={24} strokeWidth={3} className="group-hover:-translate-x-1 transition-transform" />
@@ -73,7 +74,7 @@ export default function AllOrdersPage() {
               <h1 className="text-[#4B3832] text-4xl font-black tracking-tighter italic uppercase">Order History</h1>
             </div>
           </div>
-          
+          {/*total transactions count*/}
           <div className="flex items-center gap-3 bg-[#4B3832] text-white px-6 py-3 rounded-2xl shadow-lg">
             <span className="text-xs font-black tracking-widest">{orders.length} TOTAL TRANSACTIONS</span>
           </div>
@@ -91,7 +92,7 @@ export default function AllOrdersPage() {
                 <h2 className="font-black text-lg tracking-tighter text-[#4B3832] italic">{order.name}</h2>
                 <span className="font-black text-[10px] text-[#DCC7AA] tracking-widest">{order.id}</span>
               </div>
-
+              {/*items list section*/}
               <div className="mb-6 relative z-10">
                 <span className="text-[10px] font-black text-[#6F4E37] uppercase tracking-widest border-b-2 border-[#DCC7AA] pb-1">
                   {order.itemsCount} {order.itemsCount === 1 ? 'item' : 'items'}
@@ -105,13 +106,13 @@ export default function AllOrdersPage() {
                   ))}
                 </ul>
               </div>
-
+              {/*order note section*/}
               <div className="mt-auto pt-6 border-t border-[#DCC7AA]/30 space-y-4 relative z-10">
                 <div className="flex justify-between items-center text-[12px] font-black">
                   <span className="text-[#DCC7AA] uppercase tracking-widest text-[10px]">Grand Total</span>
                   <span className="text-[#4B3832] text-lg">₱{order.total.toFixed(2)}</span>
                 </div>
-              
+                {/*order status dropdown section*/}
                 <div className="relative">
                   <select 
                     value={order.status} 

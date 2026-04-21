@@ -15,11 +15,12 @@ export default function CashierDashboard({ userEmail }: { userEmail?: string }) 
     { id: 7, name: "Classic Burger", category: "PASTA & BURGERS", price: 180, quantity: 0 },
   ]);
 
+  //store orders locally for now
   const [orders, setOrders] = useState<any[]>([]);
   const syncMenu = (updatedMenu: any[]) => {
     setMenuItems(updatedMenu);
   };
-
+  // update quantity of menu item in order
   const updateQuantity = (id: number | string, amount: number) => {
     setMenuItems(prev => prev.map(item => {
       if (item.id === id) {
@@ -31,7 +32,7 @@ export default function CashierDashboard({ userEmail }: { userEmail?: string }) 
       return item;
     }));
   };
-
+  // handle placing order, reset menu quantities and close sidebar
   const handlePlaceOrder = (customerName: string, type: string) => {
     const newOrder = {
       id: `#${Math.floor(10000 + Math.random() * 90000)}`, 
@@ -40,12 +41,12 @@ export default function CashierDashboard({ userEmail }: { userEmail?: string }) 
       type: type,
       items: menuItems.filter(i => i.quantity > 0)
     };
-
+    // add new order to state and reset menu item quantities
     setOrders(prev => [newOrder, ...prev]);
     setMenuItems(prev => prev.map(item => ({ ...item, quantity: 0 })));
     setIsSidebarOpen(false);
   };
-
+  // update order status
   const updateOrderStatus = (orderId: string, newStatus: string) => {
     setOrders(prev => prev.map(order => 
       order.id === orderId ? { ...order, status: newStatus } : order
@@ -56,6 +57,7 @@ export default function CashierDashboard({ userEmail }: { userEmail?: string }) 
     <main className="flex h-screen w-full overflow-hidden bg-white">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto no-scrollbar">
+          {/*dashboard header with user email and filter options*/}
           <DashboardClient 
             menuItems={menuItems} 
             updateQuantity={updateQuantity}
@@ -67,7 +69,7 @@ export default function CashierDashboard({ userEmail }: { userEmail?: string }) 
           />
         </div>
       </div>
-
+      {/*sidebar for order details and placing order*/}
       {isSidebarOpen && (
         <aside className="w-100 h-full shrink-0 border-l border-gray-100 bg-[#B5B5B5] z-40">
           <OrderDetailsModal 

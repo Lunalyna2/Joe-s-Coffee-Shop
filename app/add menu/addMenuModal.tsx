@@ -110,9 +110,10 @@ export function AddMenuModal({
       });
       updatedItems = [inserted[0], ...items];
     }
-
+    // update local state and notify parent
     setItems(updatedItems);
     onMenuUpdate(updatedItems);
+    // reset form after submission
     setFormData({
       name: "",
       price: "",
@@ -120,7 +121,7 @@ export function AddMenuModal({
       available: "true",
     });
   };
-
+  // pre fill form for editing and set editing state
   const startEdit = (item: any) => {
     setEditingId(item.id);
     setFormData({
@@ -130,7 +131,7 @@ export function AddMenuModal({
       available: item.status === "active" ? "true" : "false",
     });
   };
-
+  // delete item and update state
   const deleteItem = async (id: number) => {
     await deleteMenuItem(id);
     const updatedItems = items.filter((item) => item.id !== id);
@@ -139,6 +140,7 @@ export function AddMenuModal({
   };
 
   return (
+    
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6">
       <div
         className="absolute inset-0 bg-[#4B3832]/80 backdrop-blur-md"

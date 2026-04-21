@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-
+//button component for viewing order details, links to receipt page with respective receipt number
 export default function OrderDetailsButton({
   receiptNo,
 }: {

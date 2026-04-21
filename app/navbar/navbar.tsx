@@ -2,12 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image'; // Recommended for Next.js optimization
+import Image from 'next/image'; 
 import { usePathname } from 'next/navigation';
-
+//navbar component with active link highlighting for navigation
 const Navbar: React.FC = () => {
   const pathname = usePathname();
-
+  //navigation links with respective paths
   const navLinks = [
     { name: 'MENU', href: '/cashier' },
     { name: 'HISTORY', href: '/history' },
@@ -39,7 +39,7 @@ const Navbar: React.FC = () => {
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
           const isLogout = link.name === 'LOG OUT';
-          
+          //conditionally apply styles based on active link and logout link
           return (
             <li key={link.name}>
               <Link 

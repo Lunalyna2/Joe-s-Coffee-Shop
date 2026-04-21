@@ -1,7 +1,7 @@
 import ReceiptCard from "./ReceiptCard";
 import Link from "next/link";
 import { X, History } from "lucide-react";
-
+//remob if have backend
 async function getOrders() {
   return [
     {
@@ -20,7 +20,7 @@ async function getOrders() {
     },
   ];
 }
-
+//handle print function
 export default async function ReceiptPage({
   params,
 }: {
@@ -43,6 +43,7 @@ export default async function ReceiptPage({
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#F5E6CA] p-6 relative">
+      {/*close button section, hidden when printing*/}
       <div className="w-full max-w-4xl flex justify-end mb-4 print:hidden">
         <Link 
           href="/history" 
@@ -50,12 +51,12 @@ export default async function ReceiptPage({
           <X size={24} strokeWidth={3}/>
         </Link>
       </div>
-
+      {/*receipt card section*/}
       <div className="relative">
         <div className="absolute inset-0 bg-[#6F4E37]/10 blur-[100px] rounded-full" />
         <ReceiptCard order={order}/>
       </div>
-
+      {/*footer section, hidden when printing*/}
       <p className="mt-12 text-[#4B3832]/20 font-black text-[9px] uppercase tracking-[0.5em] flex items-center gap-2 print:hidden">
         <History size={12}/> BrewFlow Transaction Record
       </p>

@@ -21,6 +21,7 @@ async function getOrders() {
   ];
 }
 
+// fetch orders from database and filter by search query
 export default async function HistoryPage({
   searchParams,
 }: {
@@ -41,6 +42,7 @@ export default async function HistoryPage({
     <div className="min-h-screen bg-[#F5E6CA] p-8 md:p-12 no-scrollbar">
       <div className="w-full mx-auto bg-white rounded-[3rem] shadow-xl overflow-hidden border border-[#DCC7AA]/30">
         <div className="p-10 border-b border-[#F5E6CA] bg-white flex flex-col md:flex-row md:items-center justify-between gap-6">
+          {/*page header and search bar section*/}
           <div>
             <div className="flex items-center gap-4 mb-2">
               <h1 className="text-[#4B3832] text-4xl font-black tracking-tighter italic uppercase">
@@ -51,7 +53,7 @@ export default async function HistoryPage({
               Reviewing all past brewed orders
             </p>
           </div>
-
+          {/*search bar section*/}
           <div className="relative w-full md:w-80 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#DCC7AA] group-focus-within:text-[#4B3832] transition-colors" size={18} />
             <form action="/history" method="GET">
@@ -64,7 +66,7 @@ export default async function HistoryPage({
             </form>
           </div>
         </div>
-
+        {/*orders table section*/}
         <div className="p-6 md:p-10 overflow-x-auto">
           {filteredOrders.length > 0 ? (
             <table className="w-full border-separate border-spacing-y-4">
@@ -78,6 +80,7 @@ export default async function HistoryPage({
                   <th className="py-4 px-6 text-right">Action</th>
                 </tr>
               </thead>
+              {/*map through filtered orders and display in table rows*/}
               <tbody>
                 {filteredOrders.map((order) => (
                   <tr key={order.receiptNo} className="group transition-all">
