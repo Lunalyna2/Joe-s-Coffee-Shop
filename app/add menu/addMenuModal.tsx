@@ -8,7 +8,12 @@ import {
   PastaBurgerFactory,
   DessertFactory,
 } from "./factory/menuFactory";
-import { addMenuItem, updateMenuItem, deleteMenuItem } from "./menuActions";
+import {
+  addMenuItem,
+  updateMenuItem,
+  deleteMenuItem,
+  getMenuItems,
+} from "./menuActions";
 
 // factory selector - helper to pick the right factory based on category
 function getFactory(category: string) {
@@ -26,10 +31,19 @@ function getFactory(category: string) {
   }
 }
 
+// added type safety for MenuItem
+interface MenuItem {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  status: "active" | "hidden";
+}
+// replaced any[] with MenuItem
 interface AddMenuModalProps {
-  menuItems: any[];
+  menuItems: MenuItem[];
   onClose: () => void;
-  onMenuUpdate: (updatedItems: any[]) => void;
+  onMenuUpdate: (updatedItems: MenuItem[]) => void;
 }
 
 export function AddMenuModal({
@@ -54,9 +68,15 @@ export function AddMenuModal({
     { value: "dessert_pastry", label: "Desserts & Pastries" },
   ];
 
+  // added onMenuUpdate - makes the effect rerun with latest callback
   useEffect(() => {
-    setItems(menuItems);
-  }, [menuItems]);
+    async function fetchItems() {
+      const latest = await getMenuItems();
+      setItems(latest);
+      onMenuUpdate(latest);
+    }
+    fetchItems();
+  }, [onMenuUpdate]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -122,7 +142,7 @@ export function AddMenuModal({
     });
   };
   // pre fill form for editing and set editing state
-  const startEdit = (item: any) => {
+  const startEdit = (item: MenuItem) => {
     setEditingId(item.id);
     setFormData({
       name: item.name,
@@ -140,7 +160,6 @@ export function AddMenuModal({
   };
 
   return (
-    
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-6">
       <div
         className="absolute inset-0 bg-[#4B3832]/80 backdrop-blur-md"
