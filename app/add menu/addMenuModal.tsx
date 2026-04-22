@@ -14,6 +14,8 @@ import {
   deleteMenuItem,
   getMenuItems,
 } from "./menuActions";
+import { categories, categoryMap } from "./categories";
+import { MenuItem, AddMenuModalProps, FormData } from "./types";
 
 // factory selector - helper to pick the right factory based on category
 function getFactory(category: string) {
@@ -31,21 +33,6 @@ function getFactory(category: string) {
   }
 }
 
-// added type safety for MenuItem
-interface MenuItem {
-  id: number;
-  name: string;
-  price: number;
-  category: string;
-  status: "active" | "hidden";
-}
-// replaced any[] with MenuItem
-interface AddMenuModalProps {
-  menuItems: MenuItem[];
-  onClose: () => void;
-  onMenuUpdate: (updatedItems: MenuItem[]) => void;
-}
-
 export function AddMenuModal({
   menuItems,
   onClose,
@@ -53,30 +40,33 @@ export function AddMenuModal({
 }: AddMenuModalProps) {
   const [items, setItems] = useState(menuItems);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({
+  const initialForm: FormData = {
     name: "",
     price: "",
-    category: "coffee", // normalized default value
+    category: "coffee",
     available: "true",
-  });
+  };
 
-  // adjusted into value-label pairs for backend values
-  const categories = [
-    { value: "coffee", label: "Coffee-Based" },
-    { value: "non_coffee", label: "Non-Coffee" },
-    { value: "pasta_burger", label: "Pasta & Burgers" },
-    { value: "dessert_pastry", label: "Desserts & Pastries" },
-  ];
+  // centralize form reset with initialForm
+  const [formData, setFormData] = useState<FormData>(initialForm);
 
   // added onMenuUpdate - makes the effect rerun with latest callback
+  //fetch items once on mount
   useEffect(() => {
     async function fetchItems() {
-      const latest = await getMenuItems();
-      setItems(latest);
-      onMenuUpdate(latest);
+      try {
+        const latest = await getMenuItems();
+        if (latest?.length) {
+          setItems(latest);
+          onMenuUpdate(latest);
+        }
+      } catch (err) {
+        console.error("Failed to fetch items:", err);
+        alert("Unable to load menu items. Please try again later.");
+      }
     }
     fetchItems();
-  }, [onMenuUpdate]);
+  }, []); // run once
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -99,52 +89,60 @@ export function AddMenuModal({
       return;
     }
 
-    let updatedItems;
+    let updatedItems: MenuItem[] = [];
     // update via supabase
-    if (editingId) {
-      const updated = await updateMenuItem(editingId, {
-        name: formData.name,
-        price: numericPrice,
-        category: formData.category,
-        status: formData.available === "true" ? "active" : "hidden",
-      });
+    try {
+      if (editingId) {
+        const updated = await updateMenuItem(editingId, {
+          name: formData.name,
+          price: numericPrice,
+          category: formData.category,
+          status: formData.available === "true" ? "active" : "hidden",
+        });
+        //guard supabase response
+        if (updated?.length) {
+          updatedItems = items.map((item: MenuItem) =>
+            item.id === editingId ? updated[0] : item,
+          );
+        }
+        setEditingId(null);
+      } else {
+        // use factory to build item object
+        const factory = getFactory(formData.category);
+        const newItemObj = factory.createItem(
+          formData.name,
+          numericPrice,
+          formData.available === "true",
+        );
+        // insert via supabase
+        const inserted = await addMenuItem({
+          name: newItemObj.getName(),
+          price: newItemObj.getPrice(),
+          category: newItemObj.getCategory(),
+          status: newItemObj.getStatus(),
+        });
 
-      updatedItems = items.map((item) =>
-        item.id === editingId ? updated[0] : item,
-      );
-      setEditingId(null);
-    } else {
-      // use factory to build item object
-      const factory = getFactory(formData.category);
-      const newItemObj = factory.createItem(
-        formData.name,
-        numericPrice,
-        formData.available === "true",
-      );
-      // insert via supabase
-      const inserted = await addMenuItem({
-        name: newItemObj.getName(),
-        price: newItemObj.getPrice(),
-        category: newItemObj.getCategory(),
-        status: newItemObj.getStatus(),
-      });
-      updatedItems = [inserted[0], ...items];
+        if (inserted?.length) {
+          updatedItems = [inserted[0], ...items];
+        }
+      }
+      // update local state and notify parent
+      if (updatedItems.length > 0) {
+        setItems(updatedItems);
+        onMenuUpdate(updatedItems);
+      }
+    } catch (err) {
+      console.error("Failed to save item:", err);
+      alert("Something went wrong while saving. Please try again.");
     }
-    // update local state and notify parent
-    setItems(updatedItems);
-    onMenuUpdate(updatedItems);
     // reset form after submission
-    setFormData({
-      name: "",
-      price: "",
-      category: "coffee",
-      available: "true",
-    });
+    setFormData(initialForm);
   };
   // pre fill form for editing and set editing state
   const startEdit = (item: MenuItem) => {
     setEditingId(item.id);
     setFormData({
+      ...initialForm, // ensure all fields present
       name: item.name,
       price: item.price.toString(),
       category: item.category,
@@ -153,10 +151,15 @@ export function AddMenuModal({
   };
   // delete item and update state
   const deleteItem = async (id: number) => {
-    await deleteMenuItem(id);
-    const updatedItems = items.filter((item) => item.id !== id);
-    setItems(updatedItems);
-    onMenuUpdate(updatedItems);
+    try {
+      await deleteMenuItem(id);
+      const updatedItems = items.filter((item: MenuItem) => item.id !== id);
+      setItems(updatedItems);
+      onMenuUpdate(updatedItems);
+    } catch (err) {
+      console.error("Failed to delete item:", err);
+      alert("Unable to delete item. Please try again.");
+    }
   };
 
   return (
@@ -255,12 +258,7 @@ export function AddMenuModal({
                 type="button"
                 onClick={() => {
                   setEditingId(null);
-                  setFormData({
-                    name: "",
-                    price: "",
-                    category: "coffee",
-                    available: "true",
-                  });
+                  setFormData(initialForm);
                 }}
                 className="w-full text-[9px] font-black text-[#4B3832]/40 uppercase tracking-widest hover:text-[#4B3832] transition-colors"
               >
@@ -298,7 +296,7 @@ export function AddMenuModal({
                 </p>
               </div>
             ) : (
-              items.map((item) => (
+              items.map((item: MenuItem) => (
                 <div
                   key={item.id}
                   className="flex items-center justify-between bg-white/60 p-4 rounded-2xl border border-[#DCC7AA]/30 group hover:border-[#4B3832]/30 transition-all"
@@ -317,8 +315,7 @@ export function AddMenuModal({
                       </h4>
                       <p className="text-[9px] font-bold text-[#DCC7AA] tracking-widest">
                         ₱{item.price.toFixed(2)} •{" "}
-                        {categories.find((c) => c.value === item.category)
-                          ?.label ?? item.category}{" "}
+                        {categoryMap[item.category] ?? item.category}
                         {/*use category label instead of normalized values*/}
                       </p>
                     </div>
