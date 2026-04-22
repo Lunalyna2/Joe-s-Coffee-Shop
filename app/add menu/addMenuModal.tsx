@@ -316,7 +316,10 @@ export function AddMenuModal({
                         {item.name}
                       </h4>
                       <p className="text-[9px] font-bold text-[#DCC7AA] tracking-widest">
-                        ₱{item.price.toFixed(2)} • {item.category}
+                        ₱{item.price.toFixed(2)} •{" "}
+                        {categories.find((c) => c.value === item.category)
+                          ?.label ?? item.category}{" "}
+                        {/*use category label instead of normalized values*/}
                       </p>
                     </div>
                   </div>
