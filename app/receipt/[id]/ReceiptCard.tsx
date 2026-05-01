@@ -116,3 +116,6 @@ export default function ReceiptCard({ order }: { order: any }) {
     </>
   );
 }
+
+
+

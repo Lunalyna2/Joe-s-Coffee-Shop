@@ -3,12 +3,35 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { loginAction } from "./actions";
-import { Mail, Lock, Coffee, Eye, EyeOff, LoaderCircle, ArrowRight } from "lucide-react";
+import { Mail, Lock, Coffee, Eye, EyeOff, LoaderCircle, ArrowRight } from "lucide-react"
+import { createClient } from "@/utils/supabase/client";
+
 //login form component for admin access, with email and password inputs, and error handling
 export function LoginForm() {
   const [state, formAction] = useActionState(loginAction, { error: null });
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState(""); // State to capture email for reset
 
+  //for reset password 
+const handleForgotPassword = async (): Promise<void> => {
+  if (!email) {
+    return alert("Please enter your email address in the identification field first.");
+  }
+//initialize supabase client and get site URL for redirect after password reset
+  const supabase = createClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/auth/confirm?next=/account/updatepass`,
+  });
+
+  if (error) {
+    console.error("error:", error);
+  }
+
+  //generic message
+  alert("If this email is registered, you’ll receive a reset link.");
+};
   return (
     <div className="grid min-h-screen w-full lg:grid-cols-2 overflow-x-hidden">
       
@@ -63,6 +86,8 @@ export function LoginForm() {
                 <input 
                   type="email" 
                   name="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@brewflow.com" 
                   required 
                   className="w-full pl-14 sm:pl-16 pr-8 py-5 sm:py-6 rounded-2xl sm:rounded-4xl bg-[#F5E6CA]/40 border-2 border-transparent outline-none font-bold text-base text-[#4B3832] placeholder:text-[#4B3832]/20 focus:border-[#4B3832] focus:bg-white transition-all"/>
@@ -88,10 +113,19 @@ export function LoginForm() {
                 </button>
               </div>
             </div>
-
-            <div className="pt-4 sm:pt-8">
+          
+            <div className="pt-4 sm:pt-1 m-2">
               <SubmitButton />
+            {/*forgot password link*/}
             </div>
+               <div className="space-y-2">
+             <button 
+              type="button" 
+              onClick={handleForgotPassword}
+              className="text-[10px] text-amber-950/60 font-bold ml-4 hover:text-red-500">
+              FORGOT PASSWORD
+              </button>
+              </div> 
 
             {/*error message*/}
             {state?.error && (

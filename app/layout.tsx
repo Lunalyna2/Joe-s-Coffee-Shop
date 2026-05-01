@@ -16,6 +16,9 @@ export default function RootLayout({
     pathname === "/login" || 
     pathname === "/orders" || 
     pathname === "/logout" || 
+    pathname === "/acount" ||
+    pathname === "/account/updatepass" ||   
+  pathname === "/auth/confirm"
     pathname.startsWith("/receipt/");
 
   return (
