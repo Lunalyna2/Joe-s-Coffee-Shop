@@ -1,6 +1,6 @@
 //lets user request a reset email
 import { useState } from "react";
-import { supabase } from "../utils/supabaseClient";
+import { supabase } from "@/utils/supabase/supabaseClient";
 
 //forgot password page with email input, validation, and Supabase integration
 export default function ForgotPassword() {
