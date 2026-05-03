@@ -13,12 +13,20 @@ import {
   updateMenuItem,
   deleteMenuItem,
   getMenuItems,
-} from "./menuActions";
+} from "../lib/menuActions";
 import { categories, categoryMap } from "./categories";
-import { MenuItem, AddMenuModalProps, FormData } from "./types";
+import {
+  MenuItem,
+  MenuItemWithQuantity,
+  AddMenuModalProps,
+  FormData,
+  Category,
+} from "../types";
 
-// factory selector - helper to pick the right factory based on category
-function getFactory(category: string) {
+// this file defines addmenumodal component -- lets users add, edit, and delete menu items while displaying inventory list
+
+// factory selector - helper to pick the right factory based on category ---centralized
+function getFactory(category: Category) {
   switch (category) {
     case "coffee":
       return new CoffeeFactory();
@@ -38,13 +46,13 @@ export function AddMenuModal({
   onClose,
   onMenuUpdate,
 }: AddMenuModalProps) {
-  const [items, setItems] = useState(menuItems);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [items, setItems] = useState<MenuItemWithQuantity[]>(menuItems);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const initialForm: FormData = {
     name: "",
     price: "",
-    category: "coffee",
-    available: "true",
+    category: categories[0].value,
+    available: true,
   };
 
   // centralize form reset with initialForm
@@ -57,17 +65,24 @@ export function AddMenuModal({
       try {
         const latest = await getMenuItems();
         if (latest?.length) {
-          setItems(latest);
-          onMenuUpdate(latest);
+          const enriched = latest.map((item) => ({ ...item, quantity: 0 }));
+          setItems(enriched);
+          onMenuUpdate(enriched);
         }
       } catch (err) {
-        console.error("Failed to fetch items:", err);
-        alert("Unable to load menu items. Please try again later.");
+        if (err instanceof Error) {
+          console.error("Failed to fetch items:", err);
+          alert(`Unable to load menu items: ${err.message}`);
+        } else {
+          console.error("Failed to fetch items:", err);
+          alert("Unable to load menu items. Please try again later.");
+        }
       }
     }
     fetchItems();
-  }, []); // run once
+  }, [onMenuUpdate]);
 
+  //handle input changes in the form
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
@@ -77,33 +92,39 @@ export function AddMenuModal({
       return;
     }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "available" ? value === "true" : value,
+    }));
   };
+
   // async to call sever actions
+  // handle form submission for add/update
   const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
 
-    const numericPrice = parseFloat(formData.price);
+    const numericPrice = Number(formData.price);
     if (isNaN(numericPrice) || numericPrice < 0) {
       alert("Please enter a valid price (minimum 0).");
       return;
     }
 
-    let updatedItems: MenuItem[] = [];
     // update via supabase
     try {
       if (editingId) {
+        //updaye existing item
         const updated = await updateMenuItem(editingId, {
           name: formData.name,
           price: numericPrice,
           category: formData.category,
-          status: formData.available === "true" ? "active" : "hidden",
+          status: formData.available ? "active" : "hidden",
         });
         //guard supabase response
-        if (updated?.length) {
-          updatedItems = items.map((item: MenuItem) =>
-            item.id === editingId ? updated[0] : item,
-          );
+        if (updated) {
+          const latest = await getMenuItems();
+          const enriched = latest.map((item) => ({ ...item, quantity: 0 }));
+          setItems(enriched);
+          onMenuUpdate(enriched);
         }
         setEditingId(null);
       } else {
@@ -112,31 +133,34 @@ export function AddMenuModal({
         const newItemObj = factory.createItem(
           formData.name,
           numericPrice,
-          formData.available === "true",
+          formData.available,
         );
         // insert via supabase
         const inserted = await addMenuItem({
           name: newItemObj.getName(),
           price: newItemObj.getPrice(),
-          category: newItemObj.getCategory(),
+          category: newItemObj.getCategory() as MenuItem["category"],
           status: newItemObj.getStatus(),
         });
 
-        if (inserted?.length) {
-          updatedItems = [inserted[0], ...items];
+        if (inserted) {
+          const latest = await getMenuItems();
+          const enriched = latest.map((item) => ({ ...item, quantity: 0 }));
+          setItems(enriched);
+          onMenuUpdate(enriched);
         }
       }
-      // update local state and notify parent
-      if (updatedItems.length > 0) {
-        setItems(updatedItems);
-        onMenuUpdate(updatedItems);
-      }
     } catch (err) {
-      console.error("Failed to save item:", err);
-      alert("Something went wrong while saving. Please try again.");
+      if (err instanceof Error) {
+        console.error("Failed to save item:", err);
+        alert(`Save failed: ${err.message}`);
+      } else {
+        console.error("Failed to save item:", err);
+        alert("Save failed: Unknown error");
+      }
     }
-    // reset form after submission
-    setFormData(initialForm);
+
+    setFormData(initialForm); // reset form
   };
   // pre fill form for editing and set editing state
   const startEdit = (item: MenuItem) => {
@@ -146,19 +170,25 @@ export function AddMenuModal({
       name: item.name,
       price: item.price.toString(),
       category: item.category,
-      available: item.status === "active" ? "true" : "false",
+      available: item.status === "active",
     });
   };
   // delete item and update state
-  const deleteItem = async (id: number) => {
+  const deleteItem = async (id: string) => {
     try {
       await deleteMenuItem(id);
-      const updatedItems = items.filter((item: MenuItem) => item.id !== id);
-      setItems(updatedItems);
-      onMenuUpdate(updatedItems);
+      const latest = await getMenuItems();
+      const enriched = latest.map((item) => ({ ...item, quantity: 0 }));
+      setItems(enriched);
+      onMenuUpdate(enriched);
     } catch (err) {
-      console.error("Failed to delete item:", err);
-      alert("Unable to delete item. Please try again.");
+      if (err instanceof Error) {
+        console.error("Failed to delete item:", err);
+        alert(`Delete failed: ${err.message}`);
+      } else {
+        console.error("Failed to delete item:", err);
+        alert("Delete failed: Unknown error");
+      }
     }
   };
 
@@ -217,7 +247,7 @@ export function AddMenuModal({
                 </label>
                 <select
                   name="available"
-                  value={formData.available}
+                  value={formData.available ? "true" : "false"} // convert to string
                   onChange={handleInputChange}
                   className="w-full bg-[#F5E6CA]/30 border-2 border-[#DCC7AA] rounded-xl px-4 py-3 text-xs  text-black font-bold outline-none focus:border-[#4B3832] transition-all appearance-none"
                 >
@@ -237,9 +267,9 @@ export function AddMenuModal({
                 onChange={handleInputChange}
                 className="w-full bg-[#F5E6CA]/30 border-2 border-[#DCC7AA] rounded-xl px-4 py-3 text-xs text-black font-bold outline-none focus:border-[#4B3832] transition-all"
               >
-                {categories.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
+                {categories.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
                   </option>
                 ))}
               </select>
@@ -296,7 +326,7 @@ export function AddMenuModal({
                 </p>
               </div>
             ) : (
-              items.map((item: MenuItem) => (
+              items.map((item: MenuItemWithQuantity) => (
                 <div
                   key={item.id}
                   className="flex items-center justify-between bg-white/60 p-4 rounded-2xl border border-[#DCC7AA]/30 group hover:border-[#4B3832]/30 transition-all"
