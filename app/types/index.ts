@@ -13,7 +13,7 @@ export type CategoryFilter = Category | "ALL";
 // order type values (backend)
 export type OrderType = "dine_in" | "take_out";
 
-// order type filer ("ALL" for ui rendering)
+// order type filter ("ALL" for ui rendering)
 export type OrderTypeFilter = OrderType | "ALL";
 
 // menu item definition with type safety
@@ -33,7 +33,7 @@ export interface AddMenuModalProps {
   onMenuUpdate: (updatedItems: MenuItemWithQuantity[]) => void;
 }
 
-//form data used iin addmenumodal
+//form data used in addmenumodal
 export interface FormData {
   name: string;
   price: string; // keep as string for input binding
@@ -41,7 +41,7 @@ export interface FormData {
   available: boolean;
 }
 
-//cashierDashboard-specific
+// cashierDashboard-specific
 export interface Order {
   id: string;
   customer_name: string;
@@ -130,6 +130,15 @@ export interface MenuItemWithQuantity extends MenuItem {
   quantity: number;
 }
 
+//new type for payment info
+export interface PaymentInfo {
+  receipt_no: string;
+  payment_method: string;
+  amount: number;
+  cash_received: number;
+  change: number;
+}
+
 //new order definition
 export interface NewOrder {
   customer_name: string;
@@ -137,4 +146,5 @@ export interface NewOrder {
   status: OrderStatus;
   items: MenuItemWithQuantity[];
   cooking_request?: string;
+  payment?: PaymentInfo; //added payment info 
 }

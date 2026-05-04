@@ -10,7 +10,7 @@ import {
   updateOrderStatus,
   recordTransaction,
 } from "../lib/orderActions";
-import { MenuItem, Order, OrderTypeFilter, Transaction } from "../types";
+import { MenuItem, Order, OrderTypeFilter, Transaction, PaymentInfo } from "../types";
 import { OrderStatus } from "../types/orderStatus";
 import { ORDER_TYPE_MAP } from "../types/orderTypeMap";
 
@@ -106,6 +106,7 @@ export default function CashierDashboard({
     customerName: string,
     type: string,
     cookingRequest?: string,
+    payment?: PaymentInfo
   ): Promise<Order> => {
     const items = cartItems.filter((i) => i.quantity > 0);
     const normalizedType =
@@ -119,6 +120,7 @@ export default function CashierDashboard({
       status: "in_progress", //  backend-safe lowercase
       items,
       cooking_request: cookingRequest,
+      payment, //added payment info to order placement
     });
 
     await loadDashboardData();

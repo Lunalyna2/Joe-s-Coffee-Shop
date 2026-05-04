@@ -1,6 +1,6 @@
 //lets user set a new password
 import { useState } from "react";
-import { supabase } from "../utils/supabaseClient";
+import { supabase } from "@/utils/supabase/supabaseClient";
 
 export default function ResetPassword() {
   //local state to hold the new password input

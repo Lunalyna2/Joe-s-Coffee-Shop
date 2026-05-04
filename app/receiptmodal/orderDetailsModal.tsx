@@ -5,7 +5,7 @@ import { Utensils } from "lucide-react";
 import { CheckoutItem } from "../receiptmodal/checkOutItem";
 import { CheckoutHeader } from "../receiptmodal/checkOutHeader";
 import { CheckoutSummary } from "../receiptmodal/checkOutSummary";
-import { MenuItemWithQuantity, Order, OrderType } from "../types";
+import { MenuItemWithQuantity, Order, OrderType, PaymentInfo } from "../types";
 
 interface OrderDetailsModalProps {
   orderId: string | null;
@@ -16,6 +16,7 @@ interface OrderDetailsModalProps {
     customerName: string,
     orderType: OrderType,
     cookingRequest?: string,
+    payment?: PaymentInfo //added payment info
   ) => Promise<Order>;
   onClose: () => void;
   onResetMenuItems: () => void;
@@ -47,7 +48,7 @@ export default function OrderDetailsModal({
       sum + item.quantity * item.price,
     0,
   );
-
+//basic discount calculation based on type and value
   const calculatedDiscount =
     discountType === "percent"
       ? subtotal * (discountValue / 100)
@@ -106,7 +107,13 @@ export default function OrderDetailsModal({
         setIsEditingRequest={setIsEditingRequest}
         canPlaceOrder={orderItems.length > 0 && paymentReceived >= finalTotal}
         onPlaceOrder={() =>
-          onPlaceOrder(customerName, orderType, cookingRequest)
+          onPlaceOrder(customerName, orderType, cookingRequest, {
+            receipt_no: `R-${Date.now()}`,
+            amount: finalTotal,
+            cash_received: paymentReceived,
+            change: change,
+            payment_method: "" // added empty payment method for now, can be extended later
+          })
         }
       />
     </div>

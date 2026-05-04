@@ -1,110 +1,130 @@
+import { fetchHistoryOrders, HistoryOrder } from "../lib/historyActions";
 import OrderDetailsButton from "./OrderDetailsBtn";
-import { Calendar, Receipt, CreditCard, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
-async function getOrders() {
-  // change to fetch from supabase when connected to db
-  return [
-    {
-      date: "03/30/26",
-      receiptNo: "24759029",
-      quantity: 5,
-      amount: 547,
-      paymentType: "Cash",
-    },
-    {
-      date: "03/31/26",
-      receiptNo: "24759030",
-      quantity: 2,
-      amount: 200,
-      paymentType: "Card",
-    },
-  ];
-}
-
-// fetch orders from database and filter by search query
+//fetches and displays order history with search functionality
 export default async function HistoryPage({
   searchParams,
 }: {
   searchParams: Promise<{ query?: string }>;
 }) {
-  const { query } = await searchParams;
-  const allOrders = await getOrders();
-  const filteredOrders = allOrders.filter((order) => {
+  const params = await searchParams;
+  const query = params.query || "";
+
+  const allOrders: HistoryOrder[] = await fetchHistoryOrders();
+
+  const filteredOrders = allOrders.filter((order: HistoryOrder) => {
     if (!query) return true;
+
     const s = query.toLowerCase();
+  //allow search by customer name, receipt number, or date
     return (
-      order.receiptNo.toLowerCase().includes(s) || 
+      order.customerName.toLowerCase().includes(s) ||
+      order.transaction?.receipt_no?.toLowerCase().includes(s) ||
       order.date.toLowerCase().includes(s)
     );
   });
 
   return (
-    <div className="min-h-screen bg-[#F5E6CA] p-8 md:p-12 no-scrollbar">
-      <div className="w-full mx-auto bg-white rounded-[3rem] shadow-xl overflow-hidden border border-[#DCC7AA]/30">
-        <div className="p-10 border-b border-[#F5E6CA] bg-white flex flex-col md:flex-row md:items-center justify-between gap-6">
-          {/*page header and search bar section*/}
+    <div className="min-h-screen bg-[#F5E6CA] p-6 md:p-12 text-black no-scrollbar">
+      <div className="max-w-7xl mx-auto bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-[#DCC7AA]/40">
+        <div className="p-8 md:p-12 border-b border-[#F5E6CA] flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           <div>
-            <div className="flex items-center gap-4 mb-2">
-              <h1 className="text-[#4B3832] text-4xl font-black tracking-tighter italic uppercase">
-                Transaction History
-              </h1>
-            </div>
-            <p className="text-[#DCC7AA] font-black text-[10px] tracking-[0.2em] uppercase ml-2">
-              Reviewing all past brewed orders
+            <h1 className="text-[#4B3832] text-4xl font-black uppercase tracking-tighter italic">
+              Transactions
+            </h1>
+
+            <p className="text-[#4B3832] font-bold text-[11px] tracking-[0.25em] uppercase mt-2 opacity-80">
+              Complete Brew Log & Financial Records
             </p>
           </div>
-          {/*search bar section*/}
-          <div className="relative w-full md:w-80 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#DCC7AA] group-focus-within:text-[#4B3832] transition-colors" size={18} />
-            <form action="/history" method="GET">
-               <input 
+
+          <div className="relative w-full lg:w-96 group">
+            <form
+              action="/history"
+              method="GET"
+              className="relative flex items-center"
+            >
+              {/*search section*/}
+              <button
+                type="submit"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-[#DCC7AA] hover:text-black transition-colors z-10"
+              >
+                <Search size={20} />
+              </button>
+
+              <input
                 type="text"
                 name="query"
                 defaultValue={query}
-                placeholder="SEARCH BY DATE OR RECEIPT NUMBER"
-                className="w-full pl-12 pr-6 py-4 bg-[#F5E6CA]/30 border-2 border-transparent focus:border-[#4B3832] focus:bg-white rounded-2xl text-xs font-black text-[#4B3832] placeholder:text-[#DCC7AA] transition-all outline-none uppercase tracking-widest shadow-inner"/>
+                placeholder="SEARCH CUSTOMER OR RECEIPT..."
+                className="w-full pl-12 pr-6 py-4 bg-[#F5E6CA]/20 border-2 border-[#DCC7AA]/30 rounded-2xl text-xs font-black text-black placeholder:text-[#DCC7AA] outline-none focus:border-black focus:bg-white transition-all uppercase tracking-widest shadow-inner"
+              />
             </form>
           </div>
         </div>
-        {/*orders table section*/}
-        <div className="p-6 md:p-10 overflow-x-auto">
+
+        {/*table section*/}
+        <div className="p-4 md:p-8 overflow-x-auto">
           {filteredOrders.length > 0 ? (
-            <table className="w-full border-separate border-spacing-y-4">
+            <table className="w-full border-separate border-spacing-y-3">
               <thead>
-                <tr className="text-[#4B3832] text-[11px] font-black uppercase tracking-widest">
-                  <th className="py-4 px-6 text-left"><span className="flex items-center gap-2"><Calendar size={14}/> Date</span></th>
-                  <th className="py-4 px-6 text-left"><span className="flex items-center gap-2"><Receipt size={14}/> Receipt No.</span></th>
-                  <th className="py-4 px-6 text-center">Qty</th>
-                  <th className="py-4 px-6 text-right">Amount</th>
-                  <th className="py-4 px-6 text-center"><span className="flex items-center justify-center gap-2"><CreditCard size={14}/> Payment</span></th>
-                  <th className="py-4 px-6 text-right">Action</th>
+                <tr className="text-[#4B3832] text-[10px] font-bold uppercase tracking-[0.2em] opacity-70">
+                  <th className="px-4 py-2 text-left">Date</th>
+                  <th className="px-4 py-2 text-left">Customer</th>
+                  <th className="px-4 py-2 text-left">Type</th>
+                  <th className="px-4 py-2 text-left">Receipt No.</th>
+                  <th className="px-4 py-2 text-right">Amount</th>
+                  <th className="px-4 py-2 text-right">Received</th>
+                  <th className="px-4 py-2 text-right">Change</th>
+                  <th className="px-4 py-2 text-center">Details</th>
                 </tr>
               </thead>
-              {/*map through filtered orders and display in table rows*/}
-              <tbody>
-                {filteredOrders.map((order) => (
-                  <tr key={order.receiptNo} className="group transition-all">
-                    <td className="py-5 px-6 text-sm font-bold text-[#4B3832] bg-[#F5E6CA]/30 rounded-l-3xl border-y border-l border-[#DCC7AA]/20 group-hover:bg-[#F5E6CA]/60">
+              {/*list of orders with details button for each order*/}
+              <tbody className="text-black">
+                {filteredOrders.map((order: HistoryOrder) => (
+                  <tr
+                    key={order.id}
+                    className="group hover:translate-x-1 transition-transform duration-200"
+                  >
+                    <td className="bg-[#F5E6CA]/10 px-4 py-5 rounded-l-2xl border-y border-l border-[#DCC7AA]/20 font-bold text-sm uppercase">
                       {order.date}
                     </td>
-                    <td className="py-5 px-6 text-sm font-black text-[#6F4E37] bg-[#F5E6CA]/30 border-y border-[#DCC7AA]/20 group-hover:bg-[#F5E6CA]/60">
-                      #{order.receiptNo}
+
+                    <td className="bg-[#F5E6CA]/10 px-4 py-5 border-y border-[#DCC7AA]/20 font-black text-sm uppercase">
+                      {order.customerName}
                     </td>
-                    <td className="py-5 px-6 text-sm font-bold text-center text-[#4B3832] bg-[#F5E6CA]/30 border-y border-[#DCC7AA]/20 group-hover:bg-[#F5E6CA]/60">
-                      {order.quantity}
+
+                    <td className="bg-[#F5E6CA]/10 px-4 py-5 border-y border-[#DCC7AA]/20 text-xs font-black uppercase tracking-tighter opacity-70">
+                      {order.orderType}
                     </td>
-                    <td className="py-5 px-6 text-sm font-black text-right text-[#4B3832] bg-[#F5E6CA]/30 border-y border-[#DCC7AA]/20 group-hover:bg-[#F5E6CA]/60">
-                      ₱{order.amount.toFixed(2)}
+
+                    <td className="bg-[#F5E6CA]/10 px-4 py-5 border-y border-[#DCC7AA]/20 font-mono text-xs font-bold">
+                      #{order.transaction?.receipt_no || "—"}
                     </td>
-                    <td className="py-5 px-6 bg-[#F5E6CA]/30 border-y border-[#DCC7AA]/20 group-hover:bg-[#F5E6CA]/60">
-                      <div className="flex justify-center">
-                        <span className="px-4 py-1 bg-white border border-[#DCC7AA] text-[#4B3832] rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm">
-                          {order.paymentType}
-                        </span>
-                      </div>
+
+                    <td className="bg-[#F5E6CA]/10 px-4 py-5 border-y border-[#DCC7AA]/20 text-right text-sm font-bold">
+                      {order.transaction
+                        ? `₱${order.transaction.amount.toFixed(2)}`
+                        : "—"}
                     </td>
-                    <td className="py-5 px-6 text-right bg-[#F5E6CA]/30 rounded-r-3xl border-y border-r border-[#DCC7AA]/20 group-hover:bg-[#F5E6CA]/60">
-                      <OrderDetailsButton receiptNo={order.receiptNo} />
+
+                    <td className="bg-[#F5E6CA]/10 px-4 py-5 border-y border-[#DCC7AA]/20 text-right font-bold text-sm">
+                      {order.transaction
+                        ? `₱${order.transaction.cash_received.toFixed(2)}`
+                        : "—"}
+                    </td>
+
+                    <td className="bg-[#F5E6CA]/10 px-4 py-5 border-y border-[#DCC7AA]/20 text-right font-bold text-sm text-black/60">
+                      {order.transaction
+                        ? `₱${order.transaction.change.toFixed(2)}`
+                        : "—"}
+                    </td>
+
+                    <td className="bg-[#F5E6CA]/10 px-4 py-5 rounded-r-2xl border-y border-r border-[#DCC7AA]/20 text-center">
+                      <OrderDetailsButton
+                        receiptNo={order.transaction?.receipt_no || ""}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -112,7 +132,9 @@ export default async function HistoryPage({
             </table>
           ) : (
             <div className="py-20 text-center">
-              <p className="text-[#DCC7AA] font-black uppercase tracking-[0.3em]">No Transactions Found</p>
+              <p className="text-[#DCC7AA] font-black uppercase tracking-[0.4em] animate-pulse">
+                No Transactions Found
+              </p>
             </div>
           )}
         </div>
