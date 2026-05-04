@@ -13,6 +13,12 @@ import {
 import { MenuItem, Order, OrderTypeFilter, Transaction, PaymentInfo } from "../types";
 import { OrderStatus } from "../types/orderStatus";
 import { ORDER_TYPE_MAP } from "../types/orderTypeMap";
+import {
+  MarkInProgress,
+  MarkReadyToServe,
+  MarkCompleted,
+  CancelOrder,
+} from "../lib/orderStatusCommands";
 
 // extend MenuItem for UI selection
 interface MenuItemWithQuantity extends MenuItem {
@@ -132,13 +138,28 @@ export default function CashierDashboard({
     return newOrder; //  return so DashboardClient can use newOrder.id
   };
 
-  // Update order status via backend
-  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
-    await updateOrderStatus(
-      orderId,
-      newStatus.toLowerCase() as OrderStatus,
-      userEmail || "system",
-    );
+  // Update order status through commands
+  const handleUpdateStatus = async (order: Order, newStatus: OrderStatus) => {
+    if (!order?.id) {
+      console.error("handleUpdateStatus called without a valid order id");
+      return;
+    }
+
+    switch (newStatus) {
+      case "in_progress":
+        await new MarkInProgress().execute(order, userEmail || "system");
+        break;
+      case "ready_to_serve":
+        await new MarkReadyToServe().execute(order, userEmail || "system");
+        break;
+      case "completed":
+        await new MarkCompleted().execute(order, userEmail || "system");
+        break;
+      case "canceled":
+        await new CancelOrder().execute(order, userEmail || "system");
+        break;
+    }
+
     await loadDashboardData();
     setIsSidebarOpen(false);
     setSelectedOrderId(null);

@@ -5,7 +5,7 @@ import {
   updateMenuItem,
   deleteMenuItem,
   getMenuItems,
-} from "../app/add menu/menuActions";
+} from "@/app/lib/menuActions";
 
 // union type for supabasse responses (success or error)
 type SupabaseResponse<T> =

@@ -11,17 +11,22 @@ import {
 } from "../types";
 import { OrderStatus } from "../types/orderStatus";
 
-// place a new order with items 
+// place a new order with items
 export async function placeOrder(orderData: NewOrder): Promise<Order> {
   const supabase = await createClient();
 
-  // insert new order row into orders table
+  const normalizedStatus =
+    orderData.status === "draft"
+      ? "in_progress"
+      : (orderData.status ?? "in_progress");
+
+  //insert new order row into orders table
   const { data: order, error } = await supabase
     .from("orders")
     .insert({
       customer_name: orderData.customer_name,
       order_type: orderData.order_type,
-      status: orderData.status ?? "in_progress",
+      status: normalizedStatus,
       created_at: new Date().toISOString(),
       cooking_request: orderData.cooking_request ?? null,
     })
@@ -37,7 +42,7 @@ export async function placeOrder(orderData: NewOrder): Promise<Order> {
       menu_item_id: item.id,
       quantity: item.quantity,
       subtotal: item.price * item.quantity,
-    }))
+    })),
   );
   if (itemsError)
     throw new Error(`Failed to insert order items: ${itemsError.message}`);
@@ -53,18 +58,21 @@ export async function placeOrder(orderData: NewOrder): Promise<Order> {
       created_at: new Date().toISOString(),
     });
 
-    if (txError) throw new Error(`Failed to record transaction: ${txError.message}`);
+    if (txError)
+      throw new Error(`Failed to record transaction: ${txError.message}`);
   }
 
   //fetch full order with nested items, transactions, logs
   const { data: fullOrder, error: fetchError } = await supabase
     .from("orders")
-    .select(`
+    .select(
+      `
       *,
       order_items (*, menu_item:menu_items (*)),
       transactions (*),
       order_status_log (*)
-    `)
+    `,
+    )
     .eq("id", order.id)
     .single();
 
@@ -98,7 +106,6 @@ export async function updateOrderStatus(
       status,
       changed_at: new Date().toISOString(),
       changed_by: changedBy,
-      created_at: new Date().toISOString(),
     })
     .select()
     .single();
@@ -108,7 +115,9 @@ export async function updateOrderStatus(
 }
 
 // record a transaction (payment)
-export async function recordTransaction(tx: PaymentInfo & { order_id: string }): Promise<Transaction> {
+export async function recordTransaction(
+  tx: PaymentInfo & { order_id: string },
+): Promise<Transaction> {
   const supabase = await createClient();
 
   //insert new transaction record linked to the order
@@ -136,7 +145,8 @@ export async function getOrders(): Promise<Order[]> {
   //fetch all orders with nested items, transactions, and logs
   const { data, error } = await supabase
     .from("orders")
-    .select(`
+    .select(
+      `
       *,
       order_items (
         *,
@@ -144,7 +154,8 @@ export async function getOrders(): Promise<Order[]> {
       ),
       transactions (*),
       order_status_log (*)
-    `)
+    `,
+    )
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(`Failed to fetch orders: ${error.message}`);

@@ -7,7 +7,7 @@ import { statusMap } from "../types/statusMap";
 
 interface OrderCardProps {
   order: Order;
-  updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  updateOrderStatus: (order: Order, status: OrderStatus) => void;
   getStatusStyles: (status: OrderStatus) => string;
   statusOptions: OrderStatus[];
   onClick?: () => void;
@@ -73,7 +73,7 @@ export const OrderCard = ({
           onClick={(e) => e.stopPropagation()}
           onChange={(e) => {
             e.stopPropagation(); //prevent card click from firing
-            updateOrderStatus(order.id, e.target.value as OrderStatus);
+            updateOrderStatus(order, e.target.value as OrderStatus);
           }}
           className={`w-full text-center py-2 px-3 rounded-full text-[8px] font-black appearance-none outline-none border-2 cursor-pointer transition-colors relative z-10 ${getStatusStyles(
             order.status,

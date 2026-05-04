@@ -70,8 +70,8 @@ export default function DashboardClient({
   // predefined categories and their corresponding icons
 
   //update order status
-  const handleUpdateOrderStatus = (orderId: string, status: OrderStatus) => {
-    updateOrderStatus(orderId, status);
+  const handleUpdateOrderStatus = (order: Order, status: OrderStatus) => {
+    updateOrderStatus(order, status);
   };
 
   //delete order

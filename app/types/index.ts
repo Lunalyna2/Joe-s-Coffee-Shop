@@ -1,4 +1,4 @@
-import { OrderStatus } from "./orderStatus";
+import { DbOrderStatus, OrderStatus } from "./orderStatus";
 
 // categories for menu items
 export type Category =
@@ -82,7 +82,7 @@ export interface OrderItem {
 export interface OrderStatusLog {
   id: string;
   order_id: string;
-  status: OrderStatus;
+  status: DbOrderStatus;
   changed_at: string;
   changed_by: string;
   created_at?: string;
@@ -106,7 +106,7 @@ export interface DashboardClientProps {
   updateQuantity: (id: string, delta: number) => void;
   removeItem: (id: string) => void;
   orders: Order[];
-  updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  updateOrderStatus: (order: Order, status: OrderStatus) => void;
   orderFilter: OrderTypeFilter;
   setOrderFilter: (filter: OrderTypeFilter) => void;
   onMenuUpdate: (items: MenuItemWithQuantity[]) => void;
