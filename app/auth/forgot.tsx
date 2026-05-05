@@ -12,7 +12,7 @@ export default function ForgotPassword() {
     e.preventDefault(); 
     //calls Supabase to send a reset password email
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/reset`, 
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/account/updatepass`,
     });
     if (error) {
       alert(error.message); 
