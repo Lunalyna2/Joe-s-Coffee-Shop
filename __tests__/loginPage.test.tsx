@@ -5,7 +5,10 @@ import { LoginForm } from "../app/login/LoginForm";
 // unit test: loginPage - redirect or render form
 
 // define type
-type GetUserResponse = { data: { user: { id: string } | null }; error: null };
+type GetUserResponse = {
+  data: { user: { id: string } | null };
+  error: { message?: string } | null;
+};
 
 // fake supabse client
 const fakeSupabase = {
@@ -58,6 +61,7 @@ test("loginPage renders LoginForm when no user is authenticated", async () => {
 
   const result = await LoginPage();
 
+  expect(result).toMatchObject({ type: LoginForm });
   expect(result.type).toBe(LoginForm);
   expect(result.props).toBeDefined(); // extra check for props existence
 });

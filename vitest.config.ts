@@ -7,6 +7,10 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 
 import { playwright } from "@vitest/browser-playwright";
 
+import dotenv from "dotenv";
+
+dotenv.config({ path: ".env.test" });
+
 const dirname =
   typeof __dirname !== "undefined"
     ? __dirname
@@ -42,5 +46,10 @@ export default defineConfig({
         },
       },
     ],
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(dirname, "./"),
+    },
   },
 });

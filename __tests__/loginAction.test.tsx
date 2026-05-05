@@ -6,7 +6,7 @@ import { loginAction } from "../app/login/actions";
 // define expected shape of SignInWithPassword response
 type SignInResponse = {
   data: { user: { email: string } | null };
-  error: { message: string } | null;
+  error: { message: string; status?: number; name?: string } | null;
 };
 
 //fake supabase client -- simulates auth.signInWithPassword

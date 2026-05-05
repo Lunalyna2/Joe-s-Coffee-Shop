@@ -5,7 +5,7 @@ import {
   updateMenuItem,
   deleteMenuItem,
   getMenuItems,
-} from "@/app/lib/menuActions";
+} from "../app/lib/menuActions";
 
 // union type for supabasse responses (success or error)
 type SupabaseResponse<T> =
@@ -13,22 +13,47 @@ type SupabaseResponse<T> =
   | { data: null; error: { message: string } };
 
 // row type for menu_items
-type MenuItem = { id: number; name: string };
+interface MenuItem {
+  id: string;
+  name: string;
+}
+
+interface FakeSupabase {
+  from: (table: string) => {
+    insert?: () => {
+      select: () => { single: () => Promise<SupabaseResponse<MenuItem>> };
+    };
+    update?: () => {
+      eq: (
+        id: string,
+        value?: unknown,
+      ) => {
+        select: () => { single: () => Promise<SupabaseResponse<MenuItem>> };
+      };
+    };
+    delete?: () => { eq: (id: string) => Promise<SupabaseResponse<null>> };
+    select?: () => { order: () => Promise<SupabaseResponse<MenuItem[]>> };
+  };
+}
 
 // fake supabase client to override per test
-let fakeSupabase: any = {
+const fakeSupabase: FakeSupabase = {
   from: () => ({
     insert: () => ({
-      select: async (): Promise<SupabaseResponse<MenuItem[]>> => ({
-        data: [{ id: 1, name: "Latte" }],
-        error: null,
+      select: () => ({
+        single: async (): Promise<SupabaseResponse<MenuItem>> => ({
+          data: { id: "1", name: "Latte" },
+          error: null,
+        }),
       }),
     }),
     update: () => ({
       eq: () => ({
-        select: async (): Promise<SupabaseResponse<MenuItem[]>> => ({
-          data: [{ id: 1, name: "Updated Latte" }],
-          error: null,
+        select: () => ({
+          single: async (): Promise<SupabaseResponse<MenuItem>> => ({
+            data: { id: "1", name: "Updated Latte" },
+            error: null,
+          }),
         }),
       }),
     }),
@@ -40,7 +65,7 @@ let fakeSupabase: any = {
     }),
     select: () => ({
       order: async (): Promise<SupabaseResponse<MenuItem[]>> => ({
-        data: [{ id: 1, name: "Latte" }],
+        data: [{ id: "1", name: "Latte" }],
         error: null,
       }),
     }),
@@ -63,33 +88,33 @@ test("addMenuItem returns inserted data", async () => {
   const result = await addMenuItem({
     name: "Latte",
     price: 100,
-    category: "Coffee",
+    category: "coffee",
     status: "active",
   });
-  expect(result[0]).toMatchObject({ id: 1, name: "Latte" });
+  expect(result).toMatchObject({ id: "1", name: "Latte" });
 });
 
 //test 2: verify update returns updated row
 test("updateMenuItem returns updated data", async () => {
-  const result = await updateMenuItem(1, {
+  const result = await updateMenuItem("1", {
     name: "Updated Latte",
     price: 120,
-    category: "Coffee",
+    category: "coffee",
     status: "active",
   });
-  expect(result[0]).toMatchObject({ id: 1, name: "Updated Latte" });
+  expect(result).toMatchObject({ id: "1", name: "Updated Latte" });
 });
 
 //test 3: verify delete resolves successfully
 test("deleteMenuItem succeeds without error", async () => {
-  await expect(deleteMenuItem(1)).resolves.not.toThrow();
+  await expect(deleteMenuItem("1")).resolves.not.toThrow();
 });
 
 //test4: verify select returns array of rows
 test("getMenuItems returns sorted data", async () => {
   const result = await getMenuItems();
   expect(Array.isArray(result)).toBe(true);
-  expect(result[0]).toMatchObject({ id: 1, name: "Latte" });
+  expect(result[0]).toMatchObject({ id: "1", name: "Latte" });
 });
 
 // error cases
@@ -98,9 +123,11 @@ test("getMenuItems returns sorted data", async () => {
 test("addMenuItem throws on Supabase error", async () => {
   fakeSupabase.from = () => ({
     insert: () => ({
-      select: async (): Promise<SupabaseResponse<MenuItem[]>> => ({
-        data: null,
-        error: { message: "Insert failed" },
+      select: () => ({
+        single: async (): Promise<SupabaseResponse<MenuItem>> => ({
+          data: null,
+          error: { message: "Insert failed" },
+        }),
       }),
     }),
   });
@@ -109,7 +136,7 @@ test("addMenuItem throws on Supabase error", async () => {
     addMenuItem({
       name: "Latte",
       price: 100,
-      category: "Coffee",
+      category: "coffee",
       status: "active",
     }),
   ).rejects.toThrow("Insert failed");
@@ -120,19 +147,21 @@ test("updateMenuItem throws on Supabase error", async () => {
   fakeSupabase.from = () => ({
     update: () => ({
       eq: () => ({
-        select: async (): Promise<SupabaseResponse<MenuItem[]>> => ({
-          data: null,
-          error: { message: "Update failed" },
+        select: () => ({
+          single: async (): Promise<SupabaseResponse<MenuItem>> => ({
+            data: null,
+            error: { message: "Update failed" },
+          }),
         }),
       }),
     }),
   });
 
   await expect(
-    updateMenuItem(1, {
+    updateMenuItem("1", {
       name: "Latte",
       price: 100,
-      category: "Coffee",
+      category: "coffee",
       status: "active",
     }),
   ).rejects.toThrow("Update failed");
@@ -149,7 +178,7 @@ test("deleteMenuItem throws on Supabase error", async () => {
     }),
   });
 
-  await expect(deleteMenuItem(1)).rejects.toThrow("Delete failed");
+  await expect(deleteMenuItem("1")).rejects.toThrow("Delete failed");
 });
 
 //test8: verify select throws on error

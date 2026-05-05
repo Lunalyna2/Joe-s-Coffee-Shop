@@ -1,11 +1,13 @@
-import { vi, test, expect } from "vitest";
+import { vi, test, expect, beforeEach } from "vitest";
 import { logoutAction } from "../app/logout/actions";
 import { redirect } from "next/navigation";
 
 // unit testing: redirect or error
 // minimal type for mock
 type MockAuth = {
-  signOut: () => Promise<{ error: { message: string } | null }>;
+  signOut: () => Promise<{
+    error: { message: string; status?: number } | null;
+  }>;
 };
 type MockSupabase = {
   auth: MockAuth;
@@ -25,6 +27,11 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
 }));
 
+//clears mock call history before each test
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 // logoutAction test 1: success case
 test("calls supabase signOut and redirects", async () => {
   await logoutAction();
@@ -43,7 +50,7 @@ test("logs error if signOut fails", async () => {
   ).createClient = async () => ({
     auth: {
       signOut: vi.fn(async () => ({
-        error: { message: "Something went wrong" },
+        error: { message: "Something went wrong", status: 400 },
       })),
     },
   });
@@ -60,4 +67,21 @@ test("logs error if signOut fails", async () => {
 
   // clean up spy to avoid affecting other tests
   consoleSpy.mockRestore();
+});
+
+// test 3: edge case
+test("handles unexpected null error gracefully", async () => {
+  const supabaseModule = await import("@/utils/supabase/server");
+  (
+    supabaseModule as { createClient: () => Promise<MockSupabase> }
+  ).createClient = async () => ({
+    auth: {
+      signOut: vi.fn(async () => ({ error: null })),
+    },
+  });
+
+  const result = await logoutAction();
+
+  expect(result).toBeUndefined();
+  expect(redirect).toHaveBeenCalledWith("/");
 });
