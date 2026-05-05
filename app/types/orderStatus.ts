@@ -10,3 +10,6 @@ export type DraftStatus = "draft";
 
 // full union for UI/state
 export type OrderStatus = DraftStatus | DbOrderStatus;
+
+// extend for dropdown only
+export type StatusOrUndo = OrderStatus | "undo";
