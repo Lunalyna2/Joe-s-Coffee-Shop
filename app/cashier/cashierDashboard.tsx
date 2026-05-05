@@ -4,21 +4,26 @@ import { useState, useEffect } from "react";
 import DashboardClient from "../homepage/dashBoardClient";
 import OrderDetailsModal from "../receiptmodal/orderDetailsModal";
 import { getMenuItems } from "../lib/menuActions";
-import { placeOrder, recordTransaction } from "../lib/orderActions";
 import {
-  MenuItem,
-  Order,
-  OrderTypeFilter,
-  Transaction,
-  PaymentInfo,
-} from "../types";
-import { useOrders } from "../homepage/orderContext";
-import { OrdersProvider } from "../homepage/orderContext";
+  placeOrder,
+  getOrders,
+  updateOrderStatus,
+  recordTransaction,
+} from "../lib/orderActions";
+import { MenuItem, Order, OrderTypeFilter, Transaction, PaymentInfo } from "../types";
+import { OrderStatus } from "../types/orderStatus";
+import { ORDER_TYPE_MAP } from "../types/orderTypeMap";
+import {
+  MarkInProgress,
+  MarkReadyToServe,
+  MarkCompleted,
+  CancelOrder,
+} from "../lib/orderStatusCommands";
+
 // extend MenuItem for UI selection
 interface MenuItemWithQuantity extends MenuItem {
   quantity: number;
 }
-
 export default function CashierDashboard({
   userEmail,
 }: {
@@ -27,32 +32,47 @@ export default function CashierDashboard({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [orderFilter, setOrderFilter] = useState<OrderTypeFilter>("dine_in");
   const [menuItems, setMenuItems] = useState<MenuItemWithQuantity[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState<MenuItemWithQuantity[]>([]);
 
-  // useOrders gives us orders + updateStatus + loadOrders
-  const { orders, updateStatus, loadOrders } = useOrders();
-
-  // fetch menu on mount
+  //load menu and orders from backend
+  async function loadDashboardData() {
+    try {
+      const menu = await getMenuItems();
+      const ordersData = await getOrders();
+      setMenuItems(menu.map((m) => ({ ...m, quantity: 0 }))); // add UI-only quantity
+      setOrders(ordersData);
+    } catch (err) {
+      console.error("Error loading dashboard data:", err);
+    }
+  }
+  //fetch menu and orders on mount
   useEffect(() => {
     let isMounted = true;
-    async function fetchMenu() {
+
+    async function fetchData() {
       try {
         const menu = await getMenuItems();
+        const ordersData = await getOrders();
+
         if (isMounted) {
           setMenuItems(menu.map((m) => ({ ...m, quantity: 0 })));
+          setOrders(ordersData);
         }
       } catch (err) {
-        console.error("Error loading menu:", err);
+        console.error("Error loading dashboard data:", err);
       }
     }
-    fetchMenu();
+
+    fetchData();
+
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // update quantity of menu item in cart
+  // update quantity of menu item in order
   const updateQuantity = (id: string, amount: number) => {
     setMenuItems((prev) =>
       prev.map((item) => {
@@ -79,8 +99,7 @@ export default function CashierDashboard({
       }),
     );
   };
-
-  // remove item from cart
+  //remove item from cart
   const removeItem = (id: string) => {
     setMenuItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, quantity: 0 } : item)),
@@ -88,12 +107,12 @@ export default function CashierDashboard({
     setCartItems((prevCart) => prevCart.filter((c) => c.id !== id));
   };
 
-  // place order
+  // handle placing order, reset menu quantities and open sidebar
   const handlePlaceOrder = async (
     customerName: string,
     type: string,
     cookingRequest?: string,
-    payment?: PaymentInfo,
+    payment?: PaymentInfo
   ): Promise<Order> => {
     const items = cartItems.filter((i) => i.quantity > 0);
     const normalizedType =
@@ -104,30 +123,58 @@ export default function CashierDashboard({
     const newOrder = await placeOrder({
       customer_name: customerName || "GUEST",
       order_type: normalizedType,
-      status: "in_progress",
+      status: "in_progress", //  backend-safe lowercase
       items,
       cooking_request: cookingRequest,
-      payment,
+      payment, //added payment info to order placement
     });
 
-    await loadOrders();
+    await loadDashboardData();
     setSelectedOrderId(null);
     setIsSidebarOpen(false);
     setCartItems([]);
     setMenuItems((prev) => prev.map((item) => ({ ...item, quantity: 0 })));
 
-    return newOrder;
+    return newOrder; //  return so DashboardClient can use newOrder.id
   };
 
-  // exit order sidebar
+  // Update order status through commands
+  const handleUpdateStatus = async (order: Order, newStatus: OrderStatus) => {
+    if (!order?.id) {
+      console.error("handleUpdateStatus called without a valid order id");
+      return;
+    }
+
+    switch (newStatus) {
+      case "in_progress":
+        await new MarkInProgress().execute(order, userEmail || "system");
+        break;
+      case "ready_to_serve":
+        await new MarkReadyToServe().execute(order, userEmail || "system");
+        break;
+      case "completed":
+        await new MarkCompleted().execute(order, userEmail || "system");
+        break;
+      case "canceled":
+        await new CancelOrder().execute(order, userEmail || "system");
+        break;
+    }
+
+    await loadDashboardData();
+    setIsSidebarOpen(false);
+    setSelectedOrderId(null);
+  };
+
   const handleExitOrder = async () => {
+    // case 1: draft cart (no real order yet)
     if (!selectedOrderId || selectedOrderId === "new") {
       setIsSidebarOpen(false);
       setSelectedOrderId(null);
-      setCartItems([]);
+      setCartItems([]); //  clear cart safely
       setMenuItems((prev) => prev.map((item) => ({ ...item, quantity: 0 })));
       return;
     }
+    // case 2: real order (valid id) -- close sidebar
     setIsSidebarOpen(false);
     setSelectedOrderId(null);
     setMenuItems((prev) => prev.map((item) => ({ ...item, quantity: 0 })));
@@ -136,10 +183,9 @@ export default function CashierDashboard({
   // record transaction
   const handleRecordTransaction = async (tx: Transaction) => {
     await recordTransaction(tx);
-    await loadOrders();
+    await loadDashboardData();
   };
-
-  // reset menu items
+  //reset menuitems and clear cart
   const onResetMenuItems = () => {
     setMenuItems((prev) => prev.map((item) => ({ ...item, quantity: 0 })));
     setCartItems([]);
@@ -149,6 +195,7 @@ export default function CashierDashboard({
     <main className="flex h-screen w-full overflow-hidden bg-white">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto no-scrollbar">
+          {/*dashboard header with user email and filter options*/}
           <DashboardClient
             menuItems={menuItems}
             updateQuantity={updateQuantity}
@@ -156,6 +203,7 @@ export default function CashierDashboard({
             orders={orders.filter(
               (o) => o.status !== "completed" && o.status !== "canceled",
             )}
+            updateOrderStatus={handleUpdateStatus}
             orderFilter={orderFilter}
             setOrderFilter={setOrderFilter}
             onMenuUpdate={setMenuItems}
@@ -170,8 +218,7 @@ export default function CashierDashboard({
           />
         </div>
       </div>
-
-      {/* sidebar for order details */}
+      {/*sidebar for order details and placing order*/}
       {isSidebarOpen && (
         <aside className="w-100 h-full shrink-0 border-l border-gray-100 bg-[#B5B5B5] z-40">
           <OrderDetailsModal

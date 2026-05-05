@@ -1,84 +1,82 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "storybook/test";
-import { MenuItem } from "../app/homepage/menuItemCard";
+import { MenuItemCard } from "../app/homepage/menuItemCard";
+import { MenuItemWithQuantity } from "../app/types";
 
-const meta: Meta<typeof MenuItem> = {
-  title: "Dashboard/MenuItem",
-  component: MenuItem,
-  parameters: {
-    layout: "centered",
-  },
-  args: {
-    updateQuantity: fn(),
-  },
-  decorators: [
-    (Story) => (
-      <div className="p-10 bg-[#F5E6CA] w-100">
-        <Story />
-      </div>
-    ),
-  ],
+const meta: Meta<typeof MenuItemCard> = {
+  title: "Dashboard/MenuItemCard",
+  component: MenuItemCard,
 };
-
 export default meta;
-type Story = StoryObj<typeof MenuItem>;
+
+type Story = StoryObj<typeof MenuItemCard>;
 
 export const CoffeeItem: Story = {
   args: {
     item: {
-      id: 1,
+      id: "1",
       name: "Caramel Macchiato",
       price: 185,
-      category: "COFFEE-BASED",
+      category: "coffee", 
+      status: "active",
       quantity: 1,
-    },
+    } as MenuItemWithQuantity,
+    updateQuantity: fn(),
   },
 };
 
 export const LongNameFood: Story = {
   args: {
     item: {
-      id: 2,
+      id: "2",
       name: "Triple Patty Overload Classic Burger with Extra Cheese",
       price: 450,
-      category: "PASTA & BURGERS",
+      category: "pasta_burger",
+      status: "active",
       quantity: 0,
-    },
+    } as MenuItemWithQuantity,
+    updateQuantity: fn(),
   },
 };
 
 export const HighQuantity: Story = {
   args: {
     item: {
-      id: 6,
+      id: "6",
       name: "Butter Croissant",
       price: 95,
-      category: "DESSERTS & PASTRIES",
+      category: "dessert_pastry",
+      status: "active",
       quantity: 99,
-    },
+    } as MenuItemWithQuantity,
+    updateQuantity: fn(),
   },
 };
 
 export const ExpensiveItem: Story = {
   args: {
     item: {
-      id: 7,
+      id: "7",
       name: "Tres Leches Cake",
       price: 1550.5,
-      category: "DESSERTS & PASTRIES",
+      category: "dessert_pastry",
+      status: "active",
       quantity: 0,
-    },
+    } as MenuItemWithQuantity,
+    updateQuantity: fn(),
   },
 };
 
 export const CategoryTagLongName: Story = {
   args: {
     item: {
-      id: 8,
+      id: "8",
       name: "Classic Burger",
       price: 220,
-      category: "SIGNATURE BURGERS & SANDWICHES",
+      category: "pasta_burger",
+      status: "active",
       quantity: 0,
-    },
+    } as MenuItemWithQuantity,
+    updateQuantity: fn(),
   },
 };
