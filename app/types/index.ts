@@ -106,7 +106,6 @@ export interface DashboardClientProps {
   updateQuantity: (id: string, delta: number) => void;
   removeItem: (id: string) => void;
   orders: Order[];
-  updateOrderStatus: (order: Order, status: OrderStatus) => void;
   orderFilter: OrderTypeFilter;
   setOrderFilter: (filter: OrderTypeFilter) => void;
   onMenuUpdate: (items: MenuItemWithQuantity[]) => void;
@@ -146,5 +145,5 @@ export interface NewOrder {
   status: OrderStatus;
   items: MenuItemWithQuantity[];
   cooking_request?: string;
-  payment?: PaymentInfo; //added payment info 
+  payment?: PaymentInfo; //added payment info
 }
