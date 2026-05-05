@@ -21,13 +21,13 @@ import {
   CategoryFilter,
   MenuItemWithQuantity,
   OrderType,
-  OrderTypeFilter,
 } from "../types";
 import { categories } from "../add menu/categories";
 import OrderDetailsModal from "../receiptmodal/orderDetailsModal";
 import { ORDER_TYPE_MAP } from "../types/orderTypeMap";
-import { OrderStatus } from "../types/orderStatus";
-import { statusMap } from "../types/statusMap";
+import { STATUS_OPTIONS } from "../types/statusOptions";
+import { getStatusStyle } from "../types/statusStyles";
+import { useOrders } from "../homepage/orderContext"; // use context
 
 // helper to normalize order_items into MenuItemWithQuantity objects
 function normalizeOrderItems(
@@ -38,8 +38,8 @@ function normalizeOrderItems(
     id: oi.menu_item?.id ?? oi.menu_item_id,
     name: oi.menu_item?.name ?? "Unknown Item",
     price: oi.menu_item?.price ?? 0,
-    category: (oi.menu_item?.category as Category) ?? "coffee", // fallback
-    status: "active", // UI-only field
+    category: (oi.menu_item?.category as Category) ?? "coffee",
+    status: "active",
     quantity: oi.quantity,
   }));
 }
@@ -53,7 +53,6 @@ export default function DashboardClient({
   setOrderFilter,
   onMenuUpdate,
   orders,
-  updateOrderStatus,
   onDeleteOrder,
   onPlaceOrder,
   setSelectedOrderId,
@@ -63,23 +62,12 @@ export default function DashboardClient({
   onExitOrder,
   onResetMenuItems,
 }: DashboardClientProps) {
-  // local state for search, category filter, and menu modal visibility
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("ALL");
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
-  // predefined categories and their corresponding icons
 
-  //update order status
-  const handleUpdateOrderStatus = (order: Order, status: OrderStatus) => {
-    updateOrderStatus(order, status);
-  };
-
-  //delete order
-  const handleDeleteOrder = (orderId: string) => {
-    if (typeof onDeleteOrder === "function") {
-      onDeleteOrder?.(orderId);
-    }
-  };
+  //  pull updateStatus/undoStatus directly from context
+  const { updateStatus, undoStatus, canUndo } = useOrders();
 
   const categoryIcons: Record<Category | "ALL", React.ReactNode> = {
     ALL: <Layers size={14} />,
@@ -89,35 +77,12 @@ export default function DashboardClient({
     dessert_pastry: <CakeSlice size={14} />,
   };
 
-  //predefined status options and style for orders
-  const statusOptions: Exclude<OrderStatus, "draft">[] = [
-    "in_progress",
-    "ready_to_serve",
-    "completed",
-    "canceled",
-  ];
-
-  const getStatusStyles = (status: OrderStatus) => {
-    switch (status) {
-      case "in_progress":
-        return "bg-amber-100 text-amber-900 border-amber-300 shadow-amber-900/5";
-      case "ready_to_serve":
-        return "bg-emerald-100 text-emerald-900 border-emerald-400 shadow-emerald-900/10 animate-pulse-subtle";
-      case "completed":
-        return "bg-[#4B3832] text-[#DCC7AA] border-[#4B3832] opacity-80";
-      case "canceled":
-        return "bg-red-100 text-red-900 border-red-300 opacity-60";
-      default:
-        return "bg-[#F5E6CA]/50 border-[#DCC7AA] text-[#4B3832]";
-    }
-  };
-
-  // filter orders based on selected order type
+  // filter orders
   const filteredOrders = orders.filter(
     (o: Order) => orderFilter === "ALL" || o.order_type === orderFilter,
   );
 
-  // filter orders based on selected order type and menu items based on search and category
+  // filter menu
   const filteredMenu = menuItems.filter((item: MenuItemWithQuantity) => {
     const matchesSearch = item.name
       .toLowerCase()
@@ -127,12 +92,7 @@ export default function DashboardClient({
     return matchesSearch && matchesCategory && item.status === "active";
   });
 
-  //handler to update menu items in parent state
-  const handleMenuUpdate = (items: MenuItemWithQuantity[]) => {
-    onMenuUpdate(items);
-  };
-
-  // handler to place a new order and open sidebar
+  // handler to place a new order
   const handlePlaceOrder = async (
     customerName: string,
     orderType: OrderType,
@@ -144,23 +104,16 @@ export default function DashboardClient({
         orderType,
         cookingRequest,
       );
-
       if (newOrder?.id) {
         setSelectedOrderId(newOrder.id);
         setIsSidebarOpen(true);
       }
-
-      return newOrder; // always return neworder
+      return newOrder;
     }
-
-    // If onPlaceOrder is not provided, throw an error or handle gracefully
     throw new Error("onPlaceOrder is not defined");
   };
 
-  // derive selected order once
   const selectedOrder = orders.find((o) => o.id === selectedOrderId);
-
-  // normalize items: use order_items if present, otherwise fallback to menuItems
   const selectedOrderItems: MenuItemWithQuantity[] = selectedOrder?.order_items
     ? normalizeOrderItems(selectedOrder.order_items)
     : menuItems;
@@ -170,13 +123,14 @@ export default function DashboardClient({
       <div className="absolute top-1/4 -left-48 w-96 h-96 bg-[#4B3832]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 -right-48 w-96 h-96 bg-[#DCC7AA]/20 rounded-full blur-3xl pointer-events-none" />
       {/*orders section*/}
+      {/*orders section*/}
       <section className="p-4 md:p-6 border-b border-[#4B3832]/10 bg-white/20 backdrop-blur-md sticky top-0 z-30 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-6">
             <h2 className="font-black text-xl tracking-[0.2em] text-[#4B3832] uppercase italic shrink-0">
               Order Line
             </h2>
-            {/*ordertype*/}
+            {/* order type filter */}
             <div className="flex bg-[#4B3832] rounded-full p-1 shadow-lg border border-[#DCC7AA]/20">
               {(["dine_in", "take_out"] as OrderType[]).map((type) => (
                 <button
@@ -193,7 +147,7 @@ export default function DashboardClient({
               ))}
             </div>
           </div>
-          {/*allorders section*/}
+          {/* all orders link */}
           <Link
             href="/orders"
             className="flex items-center gap-3 px-5 py-2.5 bg-[#6F4E37] text-white rounded-full text-[8px] font-black tracking-widest uppercase hover:bg-[#4B3832] transition-all shadow-md active:scale-95 group w-fit"
@@ -206,7 +160,8 @@ export default function DashboardClient({
             </div>
           </Link>
         </div>
-        {/*ordercards section*/}
+
+        {/* order cards */}
         <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar px-1">
           {filteredOrders.length === 0 ? (
             <div className="py-6 px-4 border-2 border-dashed border-[#4B3832]/10 rounded-3xl w-full text-center">
@@ -219,18 +174,19 @@ export default function DashboardClient({
               <OrderCard
                 key={order.id}
                 order={order}
-                updateOrderStatus={handleUpdateOrderStatus}
-                statusOptions={statusOptions}
-                getStatusStyles={getStatusStyles}
+                getStatusStyles={getStatusStyle}
+                statusOptions={STATUS_OPTIONS}
                 onClick={() => {
-                  setSelectedOrderId(order.id); // capture the UUID
-                  setIsSidebarOpen(true); // open the modal/sidebar
+                  setSelectedOrderId(order.id);
+                  setIsSidebarOpen(true);
                 }}
+                showFullDetails={false}
               />
             ))
           )}
         </div>
       </section>
+
       {/*addmenumodal section */}
       <section className="p-4 md:p-8 relative z-10">
         <div className="flex flex-col gap-6 mb-8">
@@ -313,7 +269,7 @@ export default function DashboardClient({
         <AddMenuModal
           menuItems={menuItems as MenuItemWithQuantity[]}
           onClose={() => setIsMenuModalOpen(false)}
-          onMenuUpdate={handleMenuUpdate}
+          onMenuUpdate={onMenuUpdate}
         />
       )}
       <p className="mt-12 text-center text-[10px] font-black tracking-[0.3em] text-[#4B3832]/30 uppercase italic">
