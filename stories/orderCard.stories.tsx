@@ -1,7 +1,9 @@
+// stories/orderCard.stories.tsx
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "storybook/test";
 import { OrderCard } from "../app/homepage/orderCard";
 import { StatusOrUndo } from "../app/types/orderStatus";
+import { OrdersProvider } from "../app/homepage/orderContext";
 
 const meta: Meta<typeof OrderCard> = {
   title: "Dashboard/OrderCard",
@@ -29,9 +31,11 @@ const meta: Meta<typeof OrderCard> = {
   },
   decorators: [
     (Story) => (
-      <div className="p-6 bg-[#F5E6CA] w-75">
-        <Story />
-      </div>
+      <OrdersProvider userEmail="demo@brewflow.com">
+        <div className="p-6 bg-[#F5E6CA] w-75">
+          <Story />
+        </div>
+      </OrdersProvider>
     ),
   ],
 };
