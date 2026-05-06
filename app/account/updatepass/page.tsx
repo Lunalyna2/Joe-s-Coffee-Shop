@@ -13,7 +13,6 @@ export default function UpdatePasswordPage() {
   const [strength, setStrength] = useState(""); 
   const router = useRouter();
 
-  // Simple password strength checker
   const checkStrength = (value: string) => {
     let score = 0;
     if (value.length >= 8) score++;
@@ -26,7 +25,7 @@ export default function UpdatePasswordPage() {
     if (score === 3 || score === 4) return "Medium";
     return "Strong";
   };
-//handles form submission when user sets a new password
+
   const handleUpdatePassword = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSuccess("");
@@ -38,13 +37,14 @@ export default function UpdatePasswordPage() {
 
     setLoading(true);
     const supabase = createClient();
-//attempt to update the user's password with Supabase
+
     const { error: updateError } = await supabase.auth.updateUser({ password });
+    
     if (updateError) {
       setLoading(false);
       return setErrorMsg("Failed to update password. Please try again.");
     }
-//after successful password update, attempt to auto-login the user
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -53,17 +53,17 @@ export default function UpdatePasswordPage() {
       setLoading(false);
       return setErrorMsg("Could not retrieve user email.");
     }
-//attempt to sign in with the new password to verify it works
+
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: user.email,
       password,
     });
 
     setLoading(false);
-// If auto-login fails, show a message but still redirect to login page
+
     if (signInError) {
       setErrorMsg("Updated, but auto-login failed.");
-      router.push("/auth/login");
+      router.push("/login");
     } else {
       setSuccess("Password updated! Redirecting...");
       setTimeout(() => router.push("/"), 2000);
@@ -82,7 +82,7 @@ export default function UpdatePasswordPage() {
           <p className="text-base text-[#4B3832]/60">Enter your new secure password</p>
         </div>
 
-        {/*password*/}
+        {/* Password Input */}
         <div className="space-y-3">
           <label className="text-base font-medium text-[#4B3832]/70">New Password</label>
           <input
@@ -97,7 +97,7 @@ export default function UpdatePasswordPage() {
             required
             className="w-full px-5 py-4 text-lg rounded-xl border text-[#4B3832] border-[#DCC7AA] bg-white/80 focus:ring-2 focus:ring-[#4B3832] focus:outline-none transition"
           />
-          {/*strength feedback*/}
+
           {password && (
             <p
               className={`text-sm font-semibold ${

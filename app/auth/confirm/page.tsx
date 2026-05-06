@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
-export default function ConfirmPage() {
+// Move the logic into a separate component to wrap it in Suspense
+function ConfirmContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -22,8 +23,6 @@ export default function ConfirmPage() {
         return;
       }
 
-      // Read the 'next' parameter we sent from the Forgot Password page
-      // Default to /account/updatepass if it's missing
       const nextPath = searchParams.get("next") || "/account/updatepass";
 
       // Session is valid, proceed to the next step
@@ -34,13 +33,26 @@ export default function ConfirmPage() {
   }, [router, searchParams]);
 
   return (
+    <div className="text-center">
+      <p className="text-[#4B3832] font-bold text-lg animate-pulse">
+        Verifying your request...
+      </p>
+      <p className="text-[#4B3832]/60 text-sm mt-2">One moment, brewing your session.</p>
+    </div>
+  );
+}
+
+export default function ConfirmPage() {
+  return (
     <div className="flex min-h-screen items-center justify-center bg-[#F5E6CA]">
-      <div className="text-center">
-        <p className="text-[#4B3832] font-bold text-lg animate-pulse">
-          Verifying your request...
-        </p>
-        <p className="text-[#4B3832]/60 text-sm mt-2">One moment, brewing your session.</p>
-      </div>
+  
+      <Suspense fallback={
+        <div className="text-center">
+          <p className="text-[#4B3832] font-bold text-lg opacity-50">Initializing...</p>
+        </div>
+      }>
+        <ConfirmContent />
+      </Suspense>
     </div>
   );
 }

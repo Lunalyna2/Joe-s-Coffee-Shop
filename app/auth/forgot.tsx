@@ -6,26 +6,29 @@ import { createClient } from "@/utils/supabase/client";
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const supabase = createClient();
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setMessage(null);
+
+    const supabase = createClient();
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      // window.location.origin handles localhost vs production automatically
+      // redirectTo points to the ConfirmPage logic we just wrapped in Suspense
       redirectTo: `${window.location.origin}/auth/confirm?next=/account/updatepass`,
     });
 
     setLoading(false);
 
     if (error) {
-      alert(error.message);
+      setMessage({ type: "error", text: error.message });
     } else {
-      alert("Success! Check your email for the reset link.");
+      setMessage({ type: "success", text: "Success! Check your email for the reset link." });
     }
   };
-
+  
   return (
     <div className="p-4 max-w-md mx-auto">
       <form onSubmit={handleForgotPassword} className="space-y-4">
