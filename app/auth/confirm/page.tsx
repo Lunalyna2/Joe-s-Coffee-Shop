@@ -1,38 +1,46 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-//confirmation page that handles the password reset link, verifies the token, and redirects to update password page
+
 export default function ConfirmPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const supabase = createClient();
 
-    // Function to handle the confirmation of the reset link
     const handleConfirm = async () => {
-      const { data, error } = await supabase.auth.getSession();
+      // getSession() automatically handles the code exchange from the URL
+      const { data: { session }, error } = await supabase.auth.getSession();
 
-      if (error) {
-        console.error(error);
-        alert("Invalid or expired reset link.");
-        router.push("/auth/login");
+      if (error || !session) {
+        console.error("Auth error:", error);
+        // Using a query param so your login page can show a nice error message
+        router.push("/login?error=expired-link");
         return;
       }
 
-      // If session is valid, forward to update password page
-      router.push("/account/updatepass");
+      // Read the 'next' parameter we sent from the Forgot Password page
+      // Default to /account/updatepass if it's missing
+      const nextPath = searchParams.get("next") || "/account/updatepass";
+
+      // Session is valid, proceed to the next step
+      router.push(nextPath);
     };
 
     handleConfirm();
-  }, [router]);
+  }, [router, searchParams]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F5E6CA]">
-      <p className="text-[#4B3832] font-bold text-lg">
-        Verifying reset link...
-      </p>
+      <div className="text-center">
+        <p className="text-[#4B3832] font-bold text-lg animate-pulse">
+          Verifying your request...
+        </p>
+        <p className="text-[#4B3832]/60 text-sm mt-2">One moment, brewing your session.</p>
+      </div>
     </div>
   );
 }

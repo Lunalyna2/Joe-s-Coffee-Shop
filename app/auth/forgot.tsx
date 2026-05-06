@@ -1,37 +1,50 @@
-//lets user request a reset email
+"use client";
+
 import { useState } from "react";
-import { supabase } from "@/utils/supabase/supabaseClient";
+import { createClient } from "@/utils/supabase/client";
 
-//forgot password page with email input, validation, and Supabase integration
 export default function ForgotPassword() {
-  //local state to hold the email input
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const supabase = createClient();
 
-  //handles form submission for requesting a password reset link
-  const handleForgotPassword = async (e: React.SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault(); 
-    //calls Supabase to send a reset password email
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth/confirm`,
+      // window.location.origin handles localhost vs production automatically
+      redirectTo: `${window.location.origin}/auth/confirm?next=/account/updatepass`,
     });
+
+    setLoading(false);
+
     if (error) {
-      alert(error.message); 
+      alert(error.message);
     } else {
-      alert("Password reset email sent!"); 
+      alert("Success! Check your email for the reset link.");
     }
   };
 
   return (
-    //form for entering email and requesting reset link
-    <form onSubmit={handleForgotPassword}>
-      <input
-        type="email"
-        placeholder="Enter your email"
-        value={email}
-        //update local state when user types
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <button type="submit">Reset Password</button>
-    </form>
+    <div className="p-4 max-w-md mx-auto">
+      <form onSubmit={handleForgotPassword} className="space-y-4">
+        <input
+          type="email"
+          className="w-full p-2 border rounded text-black"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <button 
+          disabled={loading}
+          type="submit" 
+          className="w-full bg-[#4B3832] text-white p-2 rounded"
+        >
+          {loading ? "Sending..." : "Send Reset Link"}
+        </button>
+      </form>
+    </div>
   );
 }

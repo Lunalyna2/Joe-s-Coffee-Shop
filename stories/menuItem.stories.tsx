@@ -6,6 +6,16 @@ import { MenuItemWithQuantity } from "../app/types";
 const meta: Meta<typeof MenuItemCard> = {
   title: "Dashboard/MenuItemCard",
   component: MenuItemCard,
+  parameters: {
+    layout: "centered",
+  },
+  decorators: [
+    (Story) => (
+      <div className="w-[320px] p-4 bg-[#F5E6CA]/20">
+        <Story />
+      </div>
+    ),
+  ],
 };
 export default meta;
 

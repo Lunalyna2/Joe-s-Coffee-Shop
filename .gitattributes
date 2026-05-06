@@ -1,0 +1,8 @@
+# Handle line endings automatically
+* text=auto
+
+# Ensure web files always use LF
+*.js text eol=lf
+*.tsx text eol=lf
+*.ts text eol=lf
+*.md text eol=lf
