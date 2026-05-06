@@ -1,5 +1,6 @@
 import { OrderCommand } from "./orderStatusCommands";
 
+//manages execution and undo stacks per order
 export class CommandHistory {
   // map: stack of commands per order ID
   private stack: Map<string, OrderCommand[]> = new Map();

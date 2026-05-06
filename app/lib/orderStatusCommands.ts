@@ -2,6 +2,7 @@ import { Order } from "../types";
 import { DbOrderStatus } from "../types/orderStatus";
 import { updateOrderStatus } from "./orderActions";
 
+//interface: defines execute and undo
 export interface OrderCommand {
   order: Order;
   actor: string;
@@ -20,7 +21,7 @@ abstract class BaseOrderCommand implements OrderCommand {
   constructor(order: Order, actor: string) {
     this.order = order;
     this.actor = actor;
-    this.prevStatus = order.status as DbOrderStatus;
+    this.prevStatus = order.status as DbOrderStatus; //store old status for undo
   }
 
   //abstract method: must be implemented by subclasses to perform a status update
@@ -34,7 +35,7 @@ abstract class BaseOrderCommand implements OrderCommand {
   }
 }
 
-// concrete commands for each status
+// concrete commands for each status - update backend and local state
 export class MarkInProgress extends BaseOrderCommand {
   async execute() {
     await updateOrderStatus(this.order.id, "in_progress", this.actor);

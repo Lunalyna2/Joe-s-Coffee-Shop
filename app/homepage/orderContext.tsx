@@ -75,7 +75,7 @@ export const OrdersProvider = ({
     let command: OrderCommand | null = null;
     switch (newStatus as DbOrderStatus) {
       case "in_progress":
-        command = new MarkInProgress(order, userEmail);
+        command = new MarkInProgress(order, userEmail); //create command
         break;
       case "ready_to_serve":
         command = new MarkReadyToServe(order, userEmail);
@@ -87,7 +87,7 @@ export const OrdersProvider = ({
         command = new CancelOrder(order, userEmail);
         break;
     }
-
+    // run command via invoker, refresh ui state
     if (command) {
       await commandHistory.execute(command);
       await loadOrders();
